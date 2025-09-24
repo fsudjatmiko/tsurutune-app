@@ -1,0 +1,25 @@
+# TsuruTune CPU Optimization Requirements
+# For CPU-only model optimization using ONNX Runtime
+
+# Core dependencies
+numpy>=1.21.0
+psutil>=5.8.0
+
+# ONNX Runtime for CPU optimization
+onnxruntime>=1.15.0
+
+# ONNX tools for model processing
+onnx>=1.14.0
+onnxsim>=0.4.0
+
+# TensorFlow for Keras model support and format preservation
+tensorflow>=2.13.0
+tf2onnx>=1.15.0
+
+# Model conversion utilities
+protobuf>=3.20.0
+
+# For development and testing (optional)
+# pytest>=7.0.0
+# black>=22.0.0
+# flake8>=4.0.0
