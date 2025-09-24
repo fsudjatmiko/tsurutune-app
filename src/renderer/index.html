@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TsuruTune - Jetson Deep Learning Optimizer</title>
+    <link rel="icon" type="image/png" href="../../assets/icons/icon-64.png">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">
+                        <img src="../../assets/icons/icon-64.png" alt="TsuruTune" style="width: 40px; height: 40px;">
+                    </div>
+                    <div class="title-section">
+                        <h1>TsuruTune</h1>
+                        <p>Deep Learning Optimization for Jetson Devices</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div class="status-indicator">
+                        <span id="statusDot" class="status-dot ready"></span>
+                        <span id="statusText" class="status-text">Ready</span>
+                    </div>
+                    <button class="github-btn" id="githubBtn" title="View on GitHub">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        <span>View on GitHub</span>
+                    </button>
+                    <button class="settings-btn" id="settingsBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 8v6m11-3h-6m-8 0H1m20.5-9h-6m-8 0H1"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="nav-menu">
+                    <div class="nav-item active" data-page="home">
+                        <div class="nav-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9,22 9,12 15,12 15,22"/>
+                            </svg>
+                        </div>
+                        <span class="nav-label">Dashboard</span>
+                    </div>
+                    <div class="nav-item" data-page="models">
+                        <div class="nav-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                        </div>
+                        <span class="nav-label">Models</span>
+                    </div>
+                    <div class="nav-item" data-page="optimize">
+                        <div class="nav-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
+                            </svg>
+                        </div>
+                        <span class="nav-label">Optimize</span>
+                    </div>
+                    <div class="nav-item" data-page="history">
+                        <div class="nav-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12,6 12,12 16,14"/>
+                            </svg>
+                        </div>
+                        <span class="nav-label">History</span>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Dashboard Page -->
+                <div class="page" id="homePage">
+                    <div class="page-header">
+                        <h1>Model Optimization Dashboard</h1>
+                        <p>Your comprehensive solution for optimizing deep learning models</p>
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="card-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                </svg>
+                            </div>
+                            <h3>Model Library</h3>
+                            <p id="modelCount">0 models in your library</p>
+                            <button class="card-action" onclick="navigateToPage('models')">Manage Models</button>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
+                                </svg>
+                            </div>
+                            <h3>Optimizations</h3>
+                            <p id="optimizationCount">0 models optimized</p>
+                            <button class="card-action" onclick="navigateToPage('optimize')">Start Optimizing</button>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="20" x2="18" y2="10"/>
+                                    <line x1="12" y1="20" x2="12" y2="4"/>
+                                    <line x1="6" y1="20" x2="6" y2="14"/>
+                                </svg>
+                            </div>
+                            <h3>Success Rate</h3>
+                            <p id="successRate">No optimizations yet</p>
+                            <button class="card-action" onclick="navigateToPage('history')">View History</button>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                                </svg>
+                            </div>
+                            <h3>Average Performance</h3>
+                            <p id="avgPerformance">No optimizations yet</p>
+                            <button class="card-action" onclick="navigateToPage('history')">See Details</button>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                                </svg>
+                            </div>
+                            <h3>Memory Saved</h3>
+                            <p id="avgMemorySaved">No optimizations yet</p>
+                            <button class="card-action" onclick="navigateToPage('models')">View Models</button>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12,6 12,12 16,14"/>
+                                </svg>
+                            </div>
+                            <h3>Recent Activity</h3>
+                            <p id="lastOptimization">No recent optimizations</p>
+                            <button class="card-action" onclick="navigateToPage('history')">View All</button>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-stats">
+                        <h2>Optimization Statistics</h2>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">Most Used Device</div>
+                                <div class="stat-value" id="popularDevice">-</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Most Used Precision</div>
+                                <div class="stat-value" id="popularPrecision">-</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Total Optimizations</div>
+                                <div class="stat-value" id="totalOptimizations">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">This Week</div>
+                                <div class="stat-value" id="weeklyOptimizations">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recent-activity">
+                        <h2>Recent Optimizations</h2>
+                        <div class="activity-list" id="activityList">
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Welcome to TsuruTune!</div>
+                                    <div class="activity-time">Just now</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Optimize Page -->
+                <div class="page" id="optimizePage" style="display: none;">
+                    <div class="page-header">
+                        <h1>Model Optimization</h1>
+                        <p>Optimize your deep learning models for Jetson devices</p>
+                    </div>
+
+                    <!-- Step 1: Model Selection -->
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="step-number">1</div>
+                            <h2>Select Model</h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="model-selection-area">
+                                <div class="config-group">
+                                    <label for="modelSelect">Pick a Model</label>
+                                    <select id="modelSelect" class="config-select">
+                                        <option value="">Choose from your uploaded models...</option>
+                                    </select>
+                                </div>
+                                <div class="selected-model-info" id="selectedModelInfo" style="display: none;">
+                                    <div class="file-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="file-details">
+                                        <div class="file-name" id="selectedFileName"></div>
+                                        <div class="file-meta">
+                                            <span id="selectedFileType"></span>
+                                        </div>
+                                    </div>
+                                    <button class="remove-btn" id="clearSelectionBtn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"/>
+                                            <line x1="6" y1="6" x2="18" y2="18"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="empty-model-state" id="emptyModelState">
+                                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 1rem; opacity: 0.5;">
+                                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                                        </svg>
+                                        <p>No models available. Please upload models in the Models section first.</p>
+                                        <button class="card-action" onclick="navigateToPage('models')">Go to Models</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Step 2: Configuration -->
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="step-number">2</div>
+                            <h2>Optimization Configuration</h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="config-grid">
+                                <div class="config-group">
+                                    <label for="deviceSelect">Target Device</label>
+                                    <select id="deviceSelect" class="config-select">
+                                        <option value="cuda">CUDA (GPU)</option>
+                                        <option value="cpu">CPU</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- CUDA (GPU) Configuration -->
+                            <div id="cudaConfig" class="device-config">
+                                <h3>CUDA (GPU) Optimization Parameters</h3>
+                                
+                                <!-- Quantization Section -->
+                                <div class="param-section">
+                                    <h4>Quantization</h4>
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cudaPrecision">Precision</label>
+                                            <select id="cudaPrecision" class="config-select">
+                                                <option value="fp32">FP32</option>
+                                                <option value="fp16" selected>FP16</option>
+                                                <option value="bf16">BF16</option>
+                                                <option value="int8">INT8</option>
+                                                <option value="int4">INT4</option>
+                                            </select>
+                                        </div>
+                                        <div class="config-group">
+                                            <label for="cudaKvCacheQuantization">KV Cache Quantization</label>
+                                            <select id="cudaKvCacheQuantization" class="config-select">
+                                                <option value="off" selected>Off</option>
+                                                <option value="int8">INT8</option>
+                                                <option value="int4">INT4</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cudaCalibrationDatasetPath">Calibration Dataset Path</label>
+                                            <input type="text" id="cudaCalibrationDatasetPath" class="config-select" placeholder="Path to calibration dataset">
+                                        </div>
+                                        <div class="config-group">
+                                            <label for="cudaCalibrationSamples">Calibration Samples</label>
+                                            <input type="number" id="cudaCalibrationSamples" class="config-select" placeholder="Number of samples" value="100">
+                                        </div>
+                                    </div>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cudaPerChannelQuantization">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cudaPerChannelQuantization">Per Channel Quantization</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cudaSymmetricQuantization">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cudaSymmetricQuantization">Symmetric Quantization</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cudaOutlierRetention">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cudaOutlierRetention">Outlier Retention</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pruning / Sparsity Section -->
+                                <div class="param-section">
+                                    <h4>Pruning / Sparsity</h4>
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cudaSparsityPattern">Sparsity Pattern (n:m)</label>
+                                            <select id="cudaSparsityPattern" class="config-select">
+                                                <option value="" selected>None</option>
+                                                <option value="2:4">2:4</option>
+                                                <option value="1:2">1:2</option>
+                                                <option value="1:4">1:4</option>
+                                                <option value="4:8">4:8</option>
+                                            </select>
+                                        </div>
+                                        <div class="config-group">
+                                            <label for="cudaSparsityTarget">Sparsity Target (%)</label>
+                                            <input type="range" id="cudaSparsityTarget" class="config-range" min="0" max="90" value="0" step="5">
+                                            <span id="cudaSparsityValue">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Graph Tweaks Section -->
+                                <div class="param-section">
+                                    <h4>Graph Tweaks</h4>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cudaGraphFusion" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cudaGraphFusion">Graph Fusion</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cudaBnFolding" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cudaBnFolding">Batch Normalization Folding</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cudaConstantFolding" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cudaConstantFolding">Constant Folding</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Engine / Runtime Section -->
+                                <div class="param-section">
+                                    <h4>Engine / Runtime</h4>
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cudaBatchSize">Batch Size</label>
+                                            <select id="cudaBatchSize" class="config-select">
+                                                <option value="1" selected>1</option>
+                                                <option value="2">2</option>
+                                                <option value="4">4</option>
+                                                <option value="8">8</option>
+                                                <option value="16">16</option>
+                                                <option value="32">32</option>
+                                            </select>
+                                        </div>
+                                        <div class="config-group">
+                                            <label for="cudaWorkspaceSize">Workspace Size (MB)</label>
+                                            <input type="number" id="cudaWorkspaceSize" class="config-select" value="1024" min="256" step="256">
+                                        </div>
+                                    </div>
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cudaDynamicShapes">Dynamic Shapes (min/opt/max)</label>
+                                            <input type="text" id="cudaDynamicShapes" class="config-select" placeholder="e.g., 1x3x224x224,4x3x224x224,8x3x224x224">
+                                        </div>
+                                    </div>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cudaTactics" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cudaTactics">Enable Tactics</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CPU Configuration -->
+                            <div id="cpuConfig" class="device-config" style="display: none;">
+                                <h3>CPU Optimization Parameters</h3>
+                                
+                                <!-- Quantization Section -->
+                                <div class="param-section">
+                                    <h4>Quantization</h4>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cpuEnableQuantization" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cpuEnableQuantization">Enable Quantization</label>
+                                        </div>
+                                    </div>
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cpuPrecision">Precision</label>
+                                            <select id="cpuPrecision" class="config-select">
+                                                <option value="fp32" selected>FP32</option>
+                                                <option value="bf16">BF16</option>
+                                                <option value="int8">INT8</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cpuCalibrationDatasetPath">Calibration Dataset Path</label>
+                                            <input type="text" id="cpuCalibrationDatasetPath" class="config-select" placeholder="Path to calibration dataset">
+                                        </div>
+                                        <div class="config-group">
+                                            <label for="cpuCalibrationSamples">Calibration Samples</label>
+                                            <input type="number" id="cpuCalibrationSamples" class="config-select" placeholder="Number of samples" value="100">
+                                        </div>
+                                    </div>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cpuPerChannelQuantization">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cpuPerChannelQuantization">Per Channel Quantization</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pruning / Sparsity Section -->
+                                <div class="param-section">
+                                    <h4>Pruning / Sparsity</h4>
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cpuChannelPruning">Channel Pruning (%)</label>
+                                            <input type="range" id="cpuChannelPruning" class="config-range" min="0" max="80" value="0" step="5">
+                                            <span id="cpuChannelPruningValue">0%</span>
+                                        </div>
+                                    </div>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cpuClustering">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cpuClustering">Clustering</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Graph Tweaks Section -->
+                                <div class="param-section">
+                                    <h4>Graph Tweaks</h4>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cpuGraphFusion" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cpuGraphFusion">Graph Fusion</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cpuConstantFolding" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cpuConstantFolding">Constant Folding</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cpuBnFolding" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cpuBnFolding">Batch Normalization Folding</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Engine / Runtime Section -->
+                                <div class="param-section">
+                                    <h4>Engine / Runtime</h4>
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cpuBatchSize">Batch Size</label>
+                                            <select id="cpuBatchSize" class="config-select">
+                                                <option value="1" selected>1</option>
+                                                <option value="2">2</option>
+                                                <option value="4">4</option>
+                                                <option value="8">8</option>
+                                                <option value="16">16</option>
+                                            </select>
+                                        </div>
+                                        <div class="config-group">
+                                            <label for="cpuNumThreads">Number of Threads</label>
+                                            <input type="number" id="cpuNumThreads" class="config-select" value="4" min="1" max="32">
+                                        </div>
+                                    </div>
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cpuIntraOpThreads">Intra-op Threads</label>
+                                            <input type="number" id="cpuIntraOpThreads" class="config-select" value="4" min="1" max="16">
+                                        </div>
+                                        <div class="config-group">
+                                            <label for="cpuInterOpThreads">Inter-op Threads</label>
+                                            <input type="number" id="cpuInterOpThreads" class="config-select" value="2" min="1" max="8">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Output Format Section -->
+                                    <div class="config-grid">
+                                        <div class="config-group">
+                                            <label for="cpuOutputFormat">Output Format</label>
+                                            <select id="cpuOutputFormat" class="config-select">
+                                                <option value="preserve" selected>Preserve Original Format</option>
+                                                <option value="tflite">Convert to TensorFlow Lite</option>
+                                                <option value="onnx">Convert to ONNX (if supported)</option>
+                                            </select>
+                                        </div>
+                                        <div class="config-group">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="cpuPreserveFormat" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="cpuPreserveFormat">Preserve Input Format (.keras → .keras, .h5 → .h5)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Step 3: Optimization -->
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="step-number">3</div>
+                            <h2>Start Optimization</h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="optimization-controls">
+                                <button class="optimize-btn" id="optimizeBtn" disabled>
+                                    <span class="btn-text">Start Optimization</span>
+                                    <div class="btn-spinner" style="display: none;"></div>
+                                </button>
+                                <p class="optimization-note">
+                                    This process may take several minutes depending on model complexity.
+                                </p>
+                            </div>
+
+                            <!-- Progress Section -->
+                            <div class="progress-section" id="progressSection" style="display: none;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span id="progressPercent">0%</span>
+                                    <span id="progressStatus">Initializing...</span>
+                                </div>
+                            </div>
+
+                            <!-- Results Section -->
+                            <div class="results-section" id="resultsSection" style="display: none;">
+                                <h3>Optimization Results</h3>
+                                <div class="results-grid">
+                                    <div class="result-card">
+                                        <div class="result-value" id="optimizationTime">--</div>
+                                        <div class="result-label">Optimization Time</div>
+                                    </div>
+                                    <div class="result-card">
+                                        <div class="result-value" id="performanceGain">--</div>
+                                        <div class="result-label">Performance Gain</div>
+                                    </div>
+                                    <div class="result-card">
+                                        <div class="result-value" id="memoryReduction">--</div>
+                                        <div class="result-label">Memory Reduction</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-container">
+                                    <canvas id="performanceChart" width="400" height="200"></canvas>
+                                </div>
+                                
+                                <div class="export-section">
+                                    <button class="export-btn" id="exportBtn">Save to Library</button>
+                                    <button class="report-btn" id="reportBtn">Generate Report</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- History Page -->
+                <div class="page" id="historyPage" style="display: none;">
+                    <div class="page-header">
+                        <h1>Optimization History</h1>
+                        <p>Track your optimization journeys and review parameter configurations</p>
+                    </div>
+                    
+                    <div class="history-section">
+                        <div class="section-actions">
+                            <div class="filter-controls">
+                                <select class="config-select" id="historyFilterDevice">
+                                    <option value="all">All Devices</option>
+                                    <option value="cuda">CUDA</option>
+                                    <option value="cpu">CPU</option>
+                                </select>
+                                <select class="config-select" id="historyFilterStatus">
+                                    <option value="all">All Status</option>
+                                    <option value="success">Successful</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                                <button class="btn btn-secondary" id="clearHistoryBtn">Clear History</button>
+                            </div>
+                        </div>
+                        
+                        <div class="history-table-container">
+                            <table class="history-table" id="historyTable">
+                                <thead>
+                                    <tr>
+                                        <th>Model Name</th>
+                                        <th>Target Device</th>
+                                        <th>Status</th>
+                                        <th>Performance Gain</th>
+                                        <th>Memory Reduction</th>
+                                        <th>Duration</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    <!-- History entries will be populated here -->
+                                </tbody>
+                            </table>
+                            
+                            <div class="empty-history-state" id="emptyHistoryState">
+                                <div class="empty-state">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 1rem; opacity: 0.5;">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12,6 12,12 16,14"/>
+                                    </svg>
+                                    <h3>No optimization history</h3>
+                                    <p>Start optimizing models to see your history here</p>
+                                    <button class="btn btn-primary" onclick="navigateToPage('optimize')">Start Optimizing</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Parameter Details Modal -->
+                    <div class="modal" id="parameterModal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Optimization Parameters</h3>
+                                <button class="modal-close" onclick="closeParameterModal()">&times;</button>
+                            </div>
+                            <div class="modal-body" id="parameterModalBody">
+                                <!-- Parameter details will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Models Page -->
+                <div class="page" id="modelsPage" style="display: none;">
+                    <div class="page-header">
+                        <h1>Model Library</h1>
+                        <p>Manage your models - import originals and view optimized versions</p>
+                    </div>
+                    
+                    <div class="models-section">
+                        <div class="section-actions">
+                            <button class="btn btn-primary" id="addNewModelBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Add New Model
+                            </button>
+                            <button class="btn btn-secondary" id="refreshModelsBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M2.5 2v6h6M21.5 22v-6h-6"/>
+                                    <path d="m7 13a9 9 0 0 1 9-9 9 9 0 0 1 8.5 6 9 9 0 0 1-8.5 6 9 9 0 0 1-6.5-3"/>
+                                </svg>
+                                Refresh Library
+                            </button>
+                        </div>
+                        
+                        <div class="models-table-container">
+                            <table class="models-table" id="modelsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Model Name</th>
+                                        <th>Type</th>
+                                        <th>Size</th>
+                                        <th>Added</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modelsTableBody">
+                                    <!-- Models will be populated here -->
+                                </tbody>
+                            </table>
+                            
+                            <div class="empty-models-state" id="emptyModelsState">
+                                <div class="empty-state">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 1rem; opacity: 0.5;">
+                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                                    </svg>
+                                    <h3>No imported models yet</h3>
+                                    <p>Import your first model to start optimizing. Only original models are shown here - optimized models can be found in the History section.</p>
+                                    <button class="btn btn-primary" onclick="document.getElementById('addNewModelBtn').click()">Import Your First Model</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Load Chart.js from node_modules -->
+    <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
+    <script src="renderer.js"></script>
+</body>
+</html>
