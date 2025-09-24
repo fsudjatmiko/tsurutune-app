@@ -1,0 +1,107 @@
+{
+  "name": "tsurutune",
+  "version": "1.0.0",
+  "description": "Deep Learning Optimization for Jetson via Tensor Core and Memory Bandwidth Alignment",
+  "main": "src/main/main.js",
+  "homepage": "https://github.com/your-username/tsurutune-app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/tsurutune-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/tsurutune-app/issues"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "dist": "npm run build",
+    "clean": "rm -rf dist build",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "electron",
+    "deep-learning", 
+    "jetson",
+    "optimization",
+    "tensorrt",
+    "onnx",
+    "ai",
+    "machine-learning",
+    "edge-computing",
+    "nvidia"
+  ],
+  "author": {
+    "name": "Farrell Rafee Sudjatmiko",
+    "email": "farrell@example.com"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  },
+  "build": {
+    "appId": "com.tsurutune.app",
+    "productName": "TsuruTune",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "python/**/*",
+      ".venv/**/*",
+      "node_modules/**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ],
+      "category": "Development"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^36.4.0",
+    "electron-builder": "^25.0.5",
+    "eslint": "^8.57.0"
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "chart.js": "^4.5.0"
+  }
+}
