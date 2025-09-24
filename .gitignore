@@ -1,0 +1,84 @@
+node_modules
+.DS_Store
+.env
+dist
+build
+testingmodels
+optimisedtestingmodels
+.venv
+
+# Model storage - don't commit model files
+models/
+testingmodels/
+optimisedtestingmodels/
+*.pth
+*.onnx
+*.engine
+*.trt
+*.pb
+*.pt
+*.h5
+*.pkl
+*.keras
+*.tflite
+
+# Datasets - typically large files
+data/
+datasets/
+*.csv
+*.json
+*.npy
+*.npz
+
+# Python cache and bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+.Python
+*.egg-info/
+*.egg
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE and editor files
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs and temporary files
+*.log
+.logs/
+logs/
+temp/
+tmp/
+*.tmp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Optimization results and benchmarks
+benchmarks/
+results/
+output/
+experiments/
+
+# CUDA/TensorRT specific
+*.plan
+*.cache
+*.serialized
