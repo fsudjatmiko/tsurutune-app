@@ -1,15 +1,10 @@
 # TsuruTune - Jetson Deep Learning Optimizer
-# TsuruTune - Jetson Deep Learning Optimizer
 
-![TsuruTune Logo](https://via.placeholder.com/200x100/4F46E5/FFFFFF?text=TsuruTune)
-
-## English
 TsuruTune is a comprehensive deep learning model optimization tool designed specifically for NVIDIA Jetson platforms. It leverages Tensor Core acceleration and memory bandwidth alignment to achieve optimal performance for deep learning inference on edge devices.
 
-## 日本語
 TsuruTuneは、NVIDIA Jetsonプラットフォーム専用に設計された包括的な深層学習モデル最適化ツールです。Tensor Coreアクセラレーションとメモリ帯域幅アライメントを活用して、エッジデバイスでの深層学習推論の最適なパフォーマンスを実現します。
 
-## 🚀 Features | 機能
+## Features | 機能
 
 ### Model Optimization | モデル最適化
 - **TensorRT Integration**: Full TensorRT optimization with CUDA support
@@ -49,7 +44,7 @@ TsuruTuneは、NVIDIA Jetsonプラットフォーム専用に設計された包�
 - **GitHub Integration**: Direct access to project repository
 - **GitHub統合**: プロジェクトリポジトリへの直接アクセス
 
-## 📋 Requirements | 動作要件
+## Requirements | 動作要件
 
 ### System Requirements | システム要件
 - **Operating System | オペレーティングシステム**: Windows 10+, macOS 10.14+, Ubuntu 18.04+
@@ -67,12 +62,12 @@ TsuruTuneは、NVIDIA Jetsonプラットフォーム専用に設計された包�
 - **ONNX Runtime**: Automatically installed | 自動インストール
 - **NumPy**: Automatically installed | 自動インストール
 
-## 🛠️ Installation | インストール
+## Installation | インストール
 
 ### Quick Setup | クイックセットアップ
 1. **Clone the repository | リポジトリをクローン:**
    ```bash
-   git clone https://github.com/your-username/tsurutune-app.git
+   git clone https://github.com/fsudjatmiko/tsurutune-app.git
    cd tsurutune-app
    ```
 
@@ -154,7 +149,7 @@ The dashboard provides | ダッシュボードでは以下を提供:
 - **Activity Feed | アクティビティフィード**: Recent optimization activities | 最近の最適化活動
 - **Device Usage | デバイス使用**: Most used devices and precision formats | 最も使用されるデバイスと精度形式
 
-## 🏗️ Architecture | アーキテクチャ
+## Architecture | アーキテクチャ
 
 ### Frontend (Electron) | フロントエンド（Electron）
 ```
@@ -217,7 +212,7 @@ python python/main.py history
 python python/main.py optimize --config '{"modelPath":"/path/to/model.onnx","device":"cpu"}'
 ```
 
-## 📊 Performance Benchmarks | パフォーマンスベンチマーク
+## Performance Benchmarks | パフォーマンスベンチマーク
 
 Typical optimization results on NVIDIA Jetson platforms | NVIDIA Jetsonプラットフォームでの典型的な最適化結果:
 
@@ -231,7 +226,7 @@ Typical optimization results on NVIDIA Jetson platforms | NVIDIA Jetsonプラッ
 *Results may vary based on hardware configuration and optimization settings.*
 *結果はハードウェア構成と最適化設定により異なる場合があります。*
 
-## 🧪 Testing | テスト
+## Testing | テスト
 
 ### Running Tests | テスト実行
 ```bash
@@ -245,35 +240,19 @@ python -m pytest python/tests/
 npm run test:integration
 ```
 
-## 🤝 Contributing | 貢献
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-貢献を歓迎します！詳細は[貢献ガイド](CONTRIBUTING.md)をご覧ください。
-
-### Development Setup | 開発環境設定
-1. Fork the repository | リポジトリをフォーク
-2. Create a feature branch | 機能ブランチを作成: `git checkout -b feature-name`
-3. Make your changes and test thoroughly | 変更を加え、十分にテスト
-4. Submit a pull request with a clear description | 明確な説明とともにプルリクエストを提出
-
 ### Code Style | コードスタイル
 - **JavaScript**: ESLint configuration included | ESLint設定を含む
 - **Python**: Follow PEP 8 guidelines | PEP 8ガイドラインに従う
 - **Commits**: Use conventional commit messages | 従来のコミットメッセージを使用
 
-## 📝 License | ライセンス
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-このプロジェクトはMITライセンスの下でライセンスされています - 詳細は[LICENSE](LICENSE)ファイルを参照してください。
-
-## 🙏 Acknowledgments | 謝辞
+## Acknowledgments | 謝辞
 
 - **NVIDIA** for TensorRT and CUDA technologies | TensorRTとCUDA技術
 - **Microsoft** for ONNX Runtime | ONNX Runtime
 - **Electron** for the cross-platform framework | クロスプラットフォームフレームワーク
 - **Open Source Community** for various libraries and tools | 各種ライブラリとツール
 
-## 🗺️ Roadmap | ロードマップ
+## Roadmap | ロードマップ
 
 ### Version 2.0 (Planned) | バージョン2.0（予定）
 - [ ] Multi-GPU optimization support | マルチGPU最適化サポート
@@ -291,9 +270,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Batch optimization | バッチ最適化
 
 ---
-
-**TsuruTune** - Accelerating AI at the edge with precision and performance.
-**TsuruTune** - 精度とパフォーマンスでエッジAIを加速
-
 *Developed by Farrell Rafee Sudjatmiko - ITS Computer Engineering*
-*開発者: Farrell Rafee Sudjatmiko - ITS Computer Engineering*
