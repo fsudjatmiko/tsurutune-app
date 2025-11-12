@@ -13,27 +13,87 @@ let mainWindow;
 function executePythonCommand(command, args = [], config = null) {
   return new Promise((resolve, reject) => {
     const pythonPath = path.join(__dirname, '../../python/main.py');
-    // Use the correct Python interpreter that has TensorFlow installed
-    const pythonExecutable = '/opt/homebrew/bin/python3.11';
-    const venvPath = path.join(__dirname, '../../.venv');
+
+    // Detect virtual environment location (common locations)
+    const possibleVenvs = [
+      path.join(__dirname, '../../python/venv'),
+      path.join(__dirname, '../../.venv')
+    ];
+    let venvPath = null;
+    for (const p of possibleVenvs) {
+      try {
+        if (fs.existsSync(p)) {
+          venvPath = p;
+          break;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // Determine python executable: prefer venv python, fall back to sensible defaults
+    let pythonExecutable = null;
+    if (venvPath) {
+      if (process.platform === 'win32') {
+        const winPy = path.join(venvPath, 'Scripts', 'python.exe');
+        if (fs.existsSync(winPy)) pythonExecutable = winPy;
+      } else {
+        const posixPy = path.join(venvPath, 'bin', 'python');
+        if (fs.existsSync(posixPy)) pythonExecutable = posixPy;
+      }
+    }
+
+    if (!pythonExecutable) {
+      // Try platform-specific preferred paths, then PATH names
+      const candidates = process.platform === 'darwin'
+        ? ['/opt/homebrew/bin/python3.11', 'python3', 'python']
+        : process.platform === 'win32'
+          ? ['python', 'python3']
+          : ['python3', 'python'];
+
+      for (const c of candidates) {
+        try {
+          if (path.isAbsolute(c)) {
+            if (fs.existsSync(c)) {
+              pythonExecutable = c;
+              break;
+            }
+          } else {
+            // assume available on PATH
+            pythonExecutable = c;
+            break;
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+
     const cmdArgs = [pythonPath, command, ...args];
-    
     if (config) {
       cmdArgs.push('--config', JSON.stringify(config));
     }
-    
-    // Set environment to use virtual environment packages
+
+    // Build PYTHONPATH and PATH using correct platform delimiter
+    const delim = path.delimiter; // ':' on POSIX, ';' on Windows
+    const pythonPathEntries = [path.join(__dirname, '../../python')];
+    if (venvPath) {
+      // attempt common site-packages locations
+      const sp1 = path.join(venvPath, 'Lib', 'site-packages');
+      const sp2 = path.join(venvPath, 'lib', `python${process.version.split('.')[0]}.${process.version.split('.')[1]}`, 'site-packages');
+      if (fs.existsSync(sp1)) pythonPathEntries.push(sp1);
+      if (fs.existsSync(sp2)) pythonPathEntries.push(sp2);
+    }
+
     const env = {
       ...process.env,
-      PYTHONPATH: [
-        path.join(__dirname, '../../python'),
-        path.join(venvPath, 'lib/python3.11/site-packages')
-      ].join(':'),
-      PATH: path.join(venvPath, 'bin') + ':' + (process.env.PATH || ''),
-      TF_CPP_MIN_LOG_LEVEL: '1', // Reduce TensorFlow verbose logging
-      VIRTUAL_ENV: venvPath
+      PYTHONPATH: pythonPathEntries.join(delim),
+      PATH: (venvPath ? (path.join(venvPath, process.platform === 'win32' ? 'Scripts' : 'bin') + delim) : '') + (process.env.PATH || ''),
+      TF_CPP_MIN_LOG_LEVEL: '1'
     };
-    
+
+    if (venvPath) env.VIRTUAL_ENV = venvPath;
+
     const pythonProcess = spawn(pythonExecutable, cmdArgs, { env });
     let stdoutData = '';
     let stderrData = '';
