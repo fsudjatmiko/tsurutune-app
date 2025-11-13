@@ -19,6 +19,9 @@ tf2onnx>=1.15.0
 # Model conversion utilities
 protobuf>=3.20.0
 
+# TensorBoard for visualization of optimization metrics
+tensorboard>=2.13.0
+
 # For development and testing (optional)
 # pytest>=7.0.0
 # black>=22.0.0

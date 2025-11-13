@@ -29,23 +29,29 @@ except ImportError:
     ONNX_AVAILABLE = False
 
 try:
-    # Suppress TensorFlow logging before import
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-    os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-    import tensorflow as tf
-    
-    # Additional logging suppression after import
-    tf.get_logger().setLevel('ERROR')
-    tf.autograph.set_verbosity(0)
-    
-    TF_AVAILABLE = True
-    try:
-        import tf2onnx
-        TF2ONNX_AVAILABLE = True
-    except ImportError:
-        TF2ONNX_AVAILABLE = False
-        tf2onnx = None
-except ImportError:
+            # Optionally write TensorBoard metrics
+            result = {
+                "success": True,
+                "optimizedPath": str(output_path),
+                "performanceGain": f"+{performance_gain:.1f}%",
+                "memoryReduction": f"{((original_size - optimized_size) / original_size * 100):.1f}%",
+                "duration": duration,
+                "originalSize": original_size,
+                "optimizedSize": optimized_size,
+                "optimization_info": {
+                    "format": f"Keras {model_path.suffix}",
+                    "precision": config.get("precision", "fp32"),
+                    "optimizations": "In-place Keras optimizations",
+                    "format_preserved": True
+                }
+            }
+
+            try:
+                self._write_tensorboard_metrics(result, config)
+            except Exception:
+                pass
+
+            return result
     TF_AVAILABLE = False
     TF2ONNX_AVAILABLE = False
     tf2onnx = None
@@ -160,8 +166,8 @@ class CpuOptimizer:
         
         # Benchmark performance
         performance_gain = self._benchmark_model(model_path, optimized_path, config)
-        
-        return {
+
+        result = {
             "success": True,
             "optimizedPath": str(optimized_path),
             "performanceGain": f"+{performance_gain:.1f}%",
@@ -176,6 +182,14 @@ class CpuOptimizer:
                 "num_threads": config.get("num_threads", 4)
             }
         }
+
+        # Optionally write metrics to TensorBoard
+        try:
+            self._write_tensorboard_metrics(result, config)
+        except Exception:
+            pass
+
+        return result
     
     def _optimize_pytorch_model(self, config: Dict[str, Any], start_time: float) -> Dict[str, Any]:
         """Optimize PyTorch model (convert to ONNX first)"""
@@ -466,8 +480,7 @@ class CpuOptimizer:
             
             # Estimate performance gain based on optimization
             performance_gain = self._estimate_tflite_performance_gain(config)
-            
-            return {
+            result = {
                 "success": True,
                 "optimizedPath": str(output_path),
                 "performanceGain": f"+{performance_gain:.1f}%",
@@ -482,6 +495,13 @@ class CpuOptimizer:
                     "note": "Used TFLite instead of ONNX due to tf2onnx issues"
                 }
             }
+
+            try:
+                self._write_tensorboard_metrics(result, config)
+            except Exception:
+                pass
+
+            return result
             
         except Exception as e:
             self.logger.error(f"TensorFlow Lite optimization failed: {str(e)}")
@@ -758,6 +778,69 @@ class CpuOptimizer:
                 return np.random.uniform(5, 15)   # Modest bf16 improvement
             else:
                 return np.random.uniform(2, 8)    # Graph optimization improvements
+        
+    def _write_tensorboard_metrics(self, result: Dict[str, Any], config: Dict[str, Any]):
+        """Optionally write optimization metrics to TensorBoard-compatible logs.
+
+        Looks for `tensorboard_logdir` (config key). If not provided, defaults to
+        python/logs/tsurutune. Uses TensorFlow's summary writer if TensorFlow is
+        available; otherwise tries torch.utils.tensorboard.SummaryWriter (if PyTorch is installed).
+        """
+        try:
+            logdir = config.get('tensorboard_logdir') if config else None
+            if not logdir:
+                # place logs next to the project python folder
+                logdir = Path(__file__).resolve().parents[1] / 'logs' / 'tsurutune'
+            logdir = str(logdir)
+
+            # Parse numeric metrics from result
+            def parse_percent(s: str) -> float:
+                try:
+                    return float(str(s).replace('%', '').replace('+', ''))
+                except Exception:
+                    return 0.0
+
+            perf = parse_percent(result.get('performanceGain', '0%'))
+            mem = parse_percent(result.get('memoryReduction', '0%'))
+            duration = float(result.get('duration', 0.0))
+            orig = int(result.get('originalSize', 0))
+            opt = int(result.get('optimizedSize', 0))
+
+            # Prefer TensorFlow summary writer if TF_AVAILABLE
+            if TF_AVAILABLE:
+                try:
+                    with tf.summary.create_file_writer(logdir).as_default():
+                        tf.summary.scalar('optimization/performance_gain_percent', perf, step=int(time.time()))
+                        tf.summary.scalar('optimization/memory_reduction_percent', mem, step=int(time.time()))
+                        tf.summary.scalar('optimization/duration_seconds', duration, step=int(time.time()))
+                        tf.summary.scalar('optimization/original_size_bytes', orig, step=int(time.time()))
+                        tf.summary.scalar('optimization/optimized_size_bytes', opt, step=int(time.time()))
+                    self.logger.info(f"Wrote TensorBoard metrics to {logdir}")
+                    return
+                except Exception as e:
+                    self.logger.warning(f"TensorBoard write via TF failed: {e}")
+
+            # Fallback to torch SummaryWriter if available
+            try:
+                if TORCH_AVAILABLE:
+                    from torch.utils.tensorboard import SummaryWriter
+                    writer = SummaryWriter(logdir)
+                    step = int(time.time())
+                    writer.add_scalar('optimization/performance_gain_percent', perf, step)
+                    writer.add_scalar('optimization/memory_reduction_percent', mem, step)
+                    writer.add_scalar('optimization/duration_seconds', duration, step)
+                    writer.add_scalar('optimization/original_size_bytes', orig, step)
+                    writer.add_scalar('optimization/optimized_size_bytes', opt, step)
+                    writer.close()
+                    self.logger.info(f"Wrote TensorBoard metrics to {logdir} (torch)")
+                    return
+            except Exception as e:
+                self.logger.debug(f"Torch SummaryWriter not available or write failed: {e}")
+
+            # If we reach here, no writer was available
+            self.logger.debug("No TensorBoard writer available; skipping TB logging")
+        except Exception as e:
+            self.logger.warning(f"Failed to write TensorBoard metrics: {e}")
     
     def get_supported_formats(self) -> List[str]:
         """Get list of supported model formats"""

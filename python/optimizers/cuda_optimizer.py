@@ -70,6 +70,56 @@ class CudaOptimizer:
             self.logger.debug("CUDA optimizer initialized with TensorRT")
             # Create TensorRT logger
             self.trt_logger = trt.Logger(trt.Logger.WARNING)
+
+    def _write_tensorboard_metrics(self, result: Dict[str, Any], config: Dict[str, Any]):
+        """Write basic TensorBoard scalars for CUDA optimization results.
+
+        Uses TensorFlow summary writer if available, else falls back to torch SummaryWriter.
+        """
+        try:
+            logdir = config.get('tensorboard_logdir') if config else None
+            if not logdir:
+                logdir = Path(__file__).resolve().parents[1] / 'logs' / 'tsurutune'
+            logdir = str(logdir)
+
+            def parse_percent(s: str) -> float:
+                try:
+                    return float(str(s).replace('%', '').replace('+', ''))
+                except Exception:
+                    return 0.0
+
+            perf = parse_percent(result.get('performanceGain', '0%'))
+            mem = parse_percent(result.get('memoryReduction', '0%'))
+            duration = float(result.get('duration', 0.0))
+
+            if TF_AVAILABLE:
+                try:
+                    with tf.summary.create_file_writer(logdir).as_default():
+                        tf.summary.scalar('optimization/performance_gain_percent', perf, step=int(time.time()))
+                        tf.summary.scalar('optimization/memory_reduction_percent', mem, step=int(time.time()))
+                        tf.summary.scalar('optimization/duration_seconds', duration, step=int(time.time()))
+                    self.logger.info(f"Wrote TensorBoard metrics to {logdir}")
+                    return
+                except Exception as e:
+                    self.logger.warning(f"TensorBoard write via TF failed: {e}")
+
+            try:
+                if TORCH_AVAILABLE:
+                    from torch.utils.tensorboard import SummaryWriter
+                    writer = SummaryWriter(logdir)
+                    step = int(time.time())
+                    writer.add_scalar('optimization/performance_gain_percent', perf, step)
+                    writer.add_scalar('optimization/memory_reduction_percent', mem, step)
+                    writer.add_scalar('optimization/duration_seconds', duration, step)
+                    writer.close()
+                    self.logger.info(f"Wrote TensorBoard metrics to {logdir} (torch)")
+                    return
+            except Exception as e:
+                self.logger.debug(f"Torch SummaryWriter not available or write failed: {e}")
+
+            self.logger.debug("No TensorBoard writer available; skipping TB logging")
+        except Exception as e:
+            self.logger.warning(f"Failed to write TensorBoard metrics: {e}")
     
     def _check_cuda_availability(self) -> bool:
         """Check if CUDA and TensorRT are properly available"""
@@ -188,7 +238,7 @@ class CudaOptimizer:
         # Benchmark performance if requested
         performance_gain = self._benchmark_model(model_path, output_path, config)
         
-        return {
+        result = {
             "success": True,
             "optimizedPath": str(output_path),
             "performanceGain": f"+{performance_gain:.1f}%",
@@ -202,6 +252,13 @@ class CudaOptimizer:
                 "num_layers": network.num_layers
             }
         }
+
+        try:
+            self._write_tensorboard_metrics(result, config)
+        except Exception:
+            pass
+
+        return result
     
     def _optimize_pytorch_model(self, config: Dict[str, Any], start_time: float) -> Dict[str, Any]:
         """Optimize PyTorch model (convert to ONNX first, then TensorRT)"""
