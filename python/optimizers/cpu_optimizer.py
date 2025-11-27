@@ -275,15 +275,25 @@ class CpuOptimizer:
             else:
                 return {"success": False, "error": f"Unsupported TensorFlow format: {model_path.suffix}"}
             
-            # Check if user wants to preserve original format
-            preserve_format = config.get("preserve_format", True)  # Default to preserving format
+            # Check output format preference
+            output_format = config.get("output_format", "preserve")
+            preserve_format = output_format == "preserve"
+            precision = config.get("precision", "fp32")
+            
+            self.logger.info(f"Output format: {output_format}, Preserve format: {preserve_format}, Precision: {precision}")
+            
+            # Force TFLite for INT8 quantization (Keras format doesn't actually quantize)
+            if precision == "int8" and preserve_format:
+                self.logger.warning("INT8 quantization requires TFLite format - automatically converting to TFLite")
+                preserve_format = False
             
             if preserve_format and model_path.suffix.lower() in ['.keras', '.h5']:
                 # Preserve original Keras/H5 format
+                self.logger.info("Using Keras in-place optimization")
                 return self._optimize_keras_in_place(model, model_path, config, start_time)
             else:
-                # Convert to TensorFlow Lite (original behavior)
-                self.logger.warning("tf2onnx conversion temporarily disabled due to threading issues")
+                # Convert to TensorFlow Lite
+                self.logger.info(f"Converting to TensorFlow Lite format (preserve_format={preserve_format})")
                 return self._optimize_with_tflite(model, model_path, config, start_time)
             
         except Exception as e:
@@ -348,15 +358,23 @@ class CpuOptimizer:
                 optimized_model.set_weights(fp16_weights)
                 self.logger.info("Converted model weights to FP16")
             elif precision == "bf16":
-                # Convert weights to bfloat16 (if supported)
+                # Convert weights to bfloat16
+                # Note: BF16 is stored as FP16 in Keras since NumPy doesn't support bfloat16
+                # The conversion provides similar benefits to FP16
                 try:
-                    import tensorflow as tf
-                    bf16_weights = [tf.cast(w, tf.bfloat16).numpy() for w in model.get_weights()]
+                    # Use FP16 as a proxy for BF16 (Keras doesn't natively support BF16 storage)
+                    bf16_weights = [w.astype('float16') for w in model.get_weights()]
                     optimized_model.set_weights(bf16_weights)
-                    self.logger.info("Converted model weights to BF16")
+                    self.logger.info("Converted model weights to BF16 (stored as FP16)")
                 except Exception as e:
                     self.logger.warning(f"BF16 conversion failed, using FP32: {e}")
                     optimized_model.set_weights(model.get_weights())
+            elif precision == "int8":
+                # For INT8, we need to use TFLite converter, not in-place optimization
+                # Return None to signal that TFLite conversion should be used
+                self.logger.info("INT8 quantization requires TFLite conversion - use output_format='tflite'")
+                # Just copy weights for now - user should use TFLite format for INT8
+                optimized_model.set_weights(model.get_weights())
             else:
                 # FP32 - just copy weights
                 optimized_model.set_weights(model.get_weights())
@@ -491,7 +509,7 @@ class CpuOptimizer:
             
             # Apply optimizations based on config
             precision = config.get("precision", "fp32")
-            enable_quantization = config.get("enable_quantization", True)
+            enable_quantization = config.get("enable_quantization", precision == "int8")
             
             # Log model input information for debugging
             try:
@@ -502,12 +520,14 @@ class CpuOptimizer:
             except Exception as e:
                 self.logger.warning(f"Could not log input shape: {e}")
             
-            if enable_quantization and precision == "int8":
+            # Apply precision-specific optimizations
+            if precision == "int8":
                 # For INT8 quantization, we need a representative dataset
                 # Check if user provided a calibration dataset
                 calibration_dataset_path = config.get("calibration_dataset_path", "")
                 calibration_samples = config.get("calibration_samples", 100)
                 
+                self.logger.info("Applying INT8 quantization")
                 if calibration_dataset_path and Path(calibration_dataset_path).exists():
                     # Use user-provided dataset
                     self.logger.info(f"Using calibration dataset: {calibration_dataset_path} with {calibration_samples} samples")
@@ -516,7 +536,7 @@ class CpuOptimizer:
                     converter.target_spec.supported_types = [tf.int8]
                 else:
                     # Generate synthetic representative dataset
-                    self.logger.warning("INT8 quantization requested but no calibration dataset provided. Generating synthetic representative data.")
+                    self.logger.warning("No calibration dataset provided. Generating synthetic representative data.")
                     try:
                         converter.representative_dataset = self._generate_representative_dataset(model, calibration_samples)
                         converter.optimizations = [tf.lite.Optimize.DEFAULT]
@@ -526,16 +546,26 @@ class CpuOptimizer:
                         self.logger.info("Falling back to dynamic range quantization")
                         converter.optimizations = [tf.lite.Optimize.DEFAULT]
                         # Don't set target_spec.supported_types for dynamic range quantization
-            elif enable_quantization and precision == "fp16":
+            elif precision == "fp16":
+                # FP16 quantization
+                self.logger.info("Applying FP16 quantization")
                 converter.optimizations = [tf.lite.Optimize.DEFAULT]
                 converter.target_spec.supported_types = [tf.float16]
-            elif enable_quantization:
-                # Default optimization (dynamic range quantization)
+            elif precision == "bf16":
+                # BF16 is approximated as FP16 in TFLite (TFLite doesn't natively support BF16)
+                self.logger.info("Applying BF16 quantization (using FP16 in TFLite)")
                 converter.optimizations = [tf.lite.Optimize.DEFAULT]
+                converter.target_spec.supported_types = [tf.float16]
+            elif precision == "fp32":
+                # FP32 - no quantization, minimal optimization
+                self.logger.info("No quantization (FP32) - applying minimal TFLite optimizations")
+                # Don't apply DEFAULT optimization for FP32 to avoid automatic quantization
+                # Just convert without quantization
+                pass
             else:
-                # No quantization - just basic optimization
-                self.logger.info("Quantization disabled, applying basic optimizations only")
-                converter.optimizations = [tf.lite.Optimize.DEFAULT]
+                # Unknown precision - use FP32 behavior
+                self.logger.warning(f"Unknown precision '{precision}', treating as FP32")
+                pass
             
             # Convert model with suppressed output
             stdout_buffer = StringIO()

@@ -1125,7 +1125,7 @@ async function startOptimization() {
             intra_op_threads: parseInt(document.getElementById('cpuIntraOpThreads')?.value || '4'),
             inter_op_threads: parseInt(document.getElementById('cpuInterOpThreads')?.value || '2'),
             // Output Format
-            preserve_format: document.getElementById('cpuPreserveFormat')?.checked ?? true
+            output_format: document.getElementById('cpuOutputFormat')?.value || 'preserve'
         };
     }
     
@@ -1236,6 +1236,13 @@ function updateProgress(percent, status) {
 function showOptimizationResults(result) {
     // Store the last optimization result for export/report functions
     lastOptimizationResult = result;
+    
+    console.log('Optimization result received:', {
+        optimizedPath: result.optimizedPath,
+        originalSize: result.originalSize,
+        optimizedSize: result.optimizedSize,
+        memoryReduction: result.memoryReduction
+    });
     
     // Update result values
     const optimizationTime = document.getElementById('optimizationTime');
@@ -1501,6 +1508,10 @@ async function saveOptimizedModelToFile() {
         
         const fileExtension = lastOptimizationResult.optimizedPath.split('.').pop() || 'model';
         const defaultFilename = `${modelName}_${device}_${precision}.${fileExtension}`;
+        
+        console.log('Save model - optimizedPath:', lastOptimizationResult.optimizedPath);
+        console.log('Save model - fileExtension:', fileExtension);
+        console.log('Save model - defaultFilename:', defaultFilename);
         
         // Open save dialog
         const savePath = await window.electronAPI.showSaveDialog({
@@ -2004,7 +2015,8 @@ function initializeBatchOptimizePage() {
     // Add listeners to all checkboxes
     const checkboxes = ['batchFP32', 'batchFP16', 'batchBF16', 'batchINT8', 
                         'batchNoGraphOpt', 'batchWithGraphOpt', 
-                        'batchPruning20', 'batchPruning40'];
+                        'batchNoPruning', 'batchPruning20', 'batchPruning40', 'batchPruning60',
+                        'batchKeepOriginal', 'batchConvertTFLite'];
     checkboxes.forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) {
@@ -2043,21 +2055,38 @@ function getSelectedBatchVariants() {
     if (document.getElementById('batchWithGraphOpt')?.checked) graphOpts.push(true);
     
     // Pruning variants (CPU only)
-    const pruning = [0];
+    const pruning = [];
     if (device === 'cpu') {
+        if (document.getElementById('batchNoPruning')?.checked) pruning.push(0);
         if (document.getElementById('batchPruning20')?.checked) pruning.push(20);
         if (document.getElementById('batchPruning40')?.checked) pruning.push(40);
+        if (document.getElementById('batchPruning60')?.checked) pruning.push(60);
+    } else {
+        pruning.push(0); // No pruning for non-CPU devices
     }
+    
+    // Output format variants
+    const formats = [];
+    if (document.getElementById('batchKeepOriginal')?.checked) formats.push('original');
+    if (document.getElementById('batchConvertTFLite')?.checked) formats.push('tflite');
     
     // Generate all combinations
     precisions.forEach(precision => {
         graphOpts.forEach(graphOpt => {
             pruning.forEach(pruningLevel => {
-                variants.push({
-                    name: `${precision.toUpperCase()}${graphOpt ? '+GraphOpt' : ''}${pruningLevel > 0 ? `+Prune${pruningLevel}%` : ''}`,
-                    precision,
-                    graphOpt,
-                    pruningLevel
+                formats.forEach(format => {
+                    const nameParts = [precision.toUpperCase()];
+                    if (graphOpt) nameParts.push('GraphOpt');
+                    if (pruningLevel > 0) nameParts.push(`Prune${pruningLevel}%`);
+                    if (format === 'tflite') nameParts.push('TFLite');
+                    
+                    variants.push({
+                        name: nameParts.join('+'),
+                        precision,
+                        graphOpt,
+                        pruningLevel,
+                        outputFormat: format
+                    });
                 });
             });
         });
@@ -2160,13 +2189,15 @@ async function startBatchOptimization() {
             batch_size: 1,
             num_threads: 4,
             intra_op_threads: 4,
-            inter_op_threads: 2
+            inter_op_threads: 2,
+            output_format: variant.outputFormat === 'tflite' ? 'tflite' : 'preserve'
         };
         
         // Add CPU-specific parameters
         if (device === 'cpu') {
             config.per_channel_quantization = variant.precision === 'int8';
             config.calibration_samples = 100;
+            config.clustering = variant.pruningLevel > 40; // Enable clustering for aggressive pruning
         }
         
         try {
@@ -2227,7 +2258,8 @@ async function startBatchOptimization() {
 function selectAllBatchPresets() {
     const checkboxes = ['batchFP32', 'batchFP16', 'batchBF16', 'batchINT8', 
                         'batchNoGraphOpt', 'batchWithGraphOpt', 
-                        'batchPruning20', 'batchPruning40'];
+                        'batchNoPruning', 'batchPruning20', 'batchPruning40', 'batchPruning60',
+                        'batchKeepOriginal', 'batchConvertTFLite'];
     checkboxes.forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) checkbox.checked = true;
@@ -2239,8 +2271,9 @@ function selectRecommendedBatchPresets() {
     // Clear all first
     clearAllBatchPresets();
     
-    // Select recommended: FP32, FP16, INT8 with graph optimizations
-    const recommended = ['batchFP32', 'batchFP16', 'batchINT8', 'batchWithGraphOpt'];
+    // Select recommended: FP32, FP16, INT8 with graph optimizations, no pruning, keep original format
+    const recommended = ['batchFP32', 'batchFP16', 'batchINT8', 
+                         'batchWithGraphOpt', 'batchNoPruning', 'batchKeepOriginal'];
     recommended.forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) checkbox.checked = true;
@@ -2251,7 +2284,8 @@ function selectRecommendedBatchPresets() {
 function clearAllBatchPresets() {
     const checkboxes = ['batchFP32', 'batchFP16', 'batchBF16', 'batchINT8', 
                         'batchNoGraphOpt', 'batchWithGraphOpt', 
-                        'batchPruning20', 'batchPruning40'];
+                        'batchNoPruning', 'batchPruning20', 'batchPruning40', 'batchPruning60',
+                        'batchKeepOriginal', 'batchConvertTFLite'];
     checkboxes.forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) checkbox.checked = false;

@@ -887,17 +887,51 @@
                                     <div class="checkbox-group">
                                         <div class="checkbox-item">
                                             <label class="toggle-switch">
+                                                <input type="checkbox" id="batchNoPruning" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchNoPruning">No Pruning (Baseline)</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
                                                 <input type="checkbox" id="batchPruning20">
                                                 <span class="toggle-slider"></span>
                                             </label>
-                                            <label for="batchPruning20">20% Channel Pruning</label>
+                                            <label for="batchPruning20">20% Channel Pruning (Light)</label>
                                         </div>
                                         <div class="checkbox-item">
                                             <label class="toggle-switch">
                                                 <input type="checkbox" id="batchPruning40">
                                                 <span class="toggle-slider"></span>
                                             </label>
-                                            <label for="batchPruning40">40% Channel Pruning</label>
+                                            <label for="batchPruning40">40% Channel Pruning (Moderate)</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchPruning60">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchPruning60">60% Channel Pruning (Aggressive)</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="preset-category">
+                                    <h3>Output Format</h3>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchKeepOriginal" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchKeepOriginal">Keep Original Format (.keras/.h5/.onnx)</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchConvertTFLite">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchConvertTFLite">Convert to TensorFlow Lite (.tflite)</label>
                                         </div>
                                     </div>
                                 </div>
