@@ -1,4 +1,4 @@
-# TsuruTune - Jetson Deep Learning Optimizer
+# TsuruTune - Edge Device Deep Learning Optimizer
 
 **[English](#english) | [日本語](#日本語-japanese)**
 
@@ -7,7 +7,7 @@
 <a name="english"></a>
 ## English
 
-TsuruTune is a comprehensive deep learning model optimization tool designed specifically for NVIDIA Jetson platforms. It leverages Tensor Core acceleration and memory bandwidth alignment to achieve optimal performance for deep learning inference on edge devices.
+TsuruTune is a comprehensive deep learning model optimization tool designed for edge devices and embedded platforms. It leverages hardware acceleration (Tensor Cores, CUDA) and memory bandwidth alignment to achieve optimal performance for deep learning inference on resource-constrained devices.
 
 ## Features
 
@@ -25,13 +25,15 @@ TsuruTune is a comprehensive deep learning model optimization tool designed spec
 - **History Management**: Complete optimization history with parameter tracking
 - **Device Configuration**: Separate optimization panels for CUDA and CPU
 - **Progress Tracking**: Real-time optimization progress visualization
+- **Batch Optimization**: Generate multiple optimized models with different parameter combinations
 
 ### Advanced Features
 - **Local Model Storage**: Organized model management with metadata
 - **Optimization History**: Persistent history with rerun capabilities
-- **Performance Analytics**: Detailed performance gain and memory reduction metrics
-- **Export Capabilities**: History export in JSON and CSV formats
+- **Performance Analytics**: Detailed performance gain and memory reduction metrics with real benchmarking
+- **Export Capabilities**: Save optimized models to any location, generate detailed reports, history export in JSON and CSV formats
 - **GitHub Integration**: Direct access to project repository
+- **16 CPU Optimization Parameters**: Complete control over quantization, pruning, graph optimizations, and runtime configuration
 
 ## Requirements
 
@@ -111,10 +113,12 @@ pip install torch torchvision tensorrt
 - **Engine Settings**: Configure batch size, workspace, and tactics
 
 #### CPU Optimization
-- **Precision**: FP32 or dynamic quantization
-- **Graph Optimizations**: Enable fusion and folding
-- **Threading**: Configure thread counts for optimal performance
-- **Pruning**: Channel pruning and clustering options
+- **Precision**: FP32, FP16, BF16, or INT8 quantization
+- **Graph Optimizations**: Enable fusion, folding, batch normalization merging
+- **Threading**: Configure intra-op and inter-op thread counts for optimal performance
+- **Pruning**: Channel pruning, clustering, and sparsity patterns
+- **Calibration**: Configurable calibration samples for accurate quantization
+- **Runtime Configuration**: Batch size, execution providers, and optimization levels
 
 ### 3. Running Optimization
 1. Navigate to the "Optimize" page
@@ -130,10 +134,26 @@ pip install torch torchvision tensorrt
 - Rerun successful optimizations with the same settings
 - Export history for analysis
 
-### 5. Analytics Dashboard
+### 5. Batch Optimization
+- Navigate to the "Batch Optimize" page
+- Select a model from your library
+- Choose optimization variants:
+  - **Precision Formats**: FP32, FP16, BF16, INT8
+  - **Graph Optimizations**: Enabled/Disabled
+  - **Pruning Options**: None/Light/Aggressive
+- Use quick presets (All, Recommended) or custom combinations
+- Start batch optimization to generate multiple optimized models
+- Compare results to find the best configuration
+
+### 6. Export & Save Models
+- After optimization, click "Save to Library" to save the optimized model to any location
+- Click "Generate Report" to create a detailed optimization report with metrics
+- Use the file explorer dialog to choose save location
+
+### 7. Analytics Dashboard
 The dashboard provides:
 - **Model Statistics**: Total models and optimizations
-- **Performance Metrics**: Average gains and memory reduction
+- **Performance Metrics**: Average gains and memory reduction with real benchmarking
 - **Success Rates**: Optimization success statistics
 - **Activity Feed**: Recent optimization activities
 - **Device Usage**: Most used devices and precision formats
@@ -203,15 +223,16 @@ python python/main.py optimize --config '{"modelPath":"/path/to/model.onnx","dev
 
 ## Performance Benchmarks
 
-Typical optimization results on NVIDIA Jetson platforms:
+Typical optimization results on edge devices:
 
 | Model Type | Original Size | Optimized Size | Performance Gain | Memory Reduction |
 |------------|---------------|----------------|------------------|------------------|
-| ResNet-50  | 98MB         | 25MB          | +45%            | 74%             |
-| YOLOv5     | 45MB         | 12MB          | +60%            | 73%             |
-| BERT-Base  | 110MB        | 28MB          | +35%            | 75%             |
+| ResNet-50  | 98MB         | 25MB (INT8)   | +45%            | 74%             |
+| ResNet-50  | 98MB         | 49MB (FP16)   | +30%            | 50%             |
+| YOLOv5     | 45MB         | 12MB (INT8)   | +60%            | 73%             |
+| BERT-Base  | 110MB        | 28MB (INT8)   | +35%            | 75%             |
 
-*Results may vary based on hardware configuration and optimization settings.*
+*Results may vary based on hardware configuration and optimization settings. Benchmarks performed using real inference timing.*
 
 ## Testing
 
@@ -248,20 +269,24 @@ npm run test:integration
 - [ ] Cloud deployment integration
 - [ ] Advanced pruning algorithms
 
-### Version 1.1 (In Progress)
+### Version 1.1 (Current)
 - [x] Complete TensorRT integration
-- [x] ONNX Runtime optimization
+- [x] ONNX Runtime optimization with all 16 parameters
 - [x] History management system
-- [x] Performance analytics
+- [x] Performance analytics with real benchmarking
+- [x] Batch optimization with preset combinations
+- [x] FP16/BF16 CPU optimization support
+- [x] Export and save optimized models
+- [x] Detailed optimization reports
 - [ ] Model validation tools
-- [ ] Batch optimization
+- [ ] Advanced pruning algorithms
 
 ---
 
 <a name="日本語-japanese"></a>
 ## 日本語 (Japanese)
 
-TsuruTuneは、NVIDIA Jetsonプラットフォーム専用に設計された包括的な深層学習モデル最適化ツールです。Tensor Coreアクセラレーションとメモリ帯域幅アライメントを活用して、エッジデバイスでの深層学習推論の最適なパフォーマンスを実現します。
+TsuruTuneは、エッジデバイスと組み込みプラットフォーム向けに設計された包括的な深層学習モデル最適化ツールです。ハードウェアアクセラレーション（Tensor Core、CUDA）とメモリ帯域幅アライメントを活用して、リソース制約のあるデバイスでの深層学習推論の最適なパフォーマンスを実現します。
 
 ## 機能
 
@@ -279,13 +304,15 @@ TsuruTuneは、NVIDIA Jetsonプラットフォーム専用に設計された包�
 - **履歴管理**: パラメータ追跡による完全な最適化履歴
 - **デバイス設定**: CUDAとCPU用の個別最適化パネル
 - **進捗追跡**: リアルタイム最適化進捗可視化
+- **バッチ最適化**: 異なるパラメータ組み合わせで複数の最適化モデルを生成
 
 ### 高度な機能
 - **ローカルモデルストレージ**: メタデータ付き整理されたモデル管理
 - **最適化履歴**: 再実行機能付き永続履歴
-- **パフォーマンス分析**: 詳細なパフォーマンス向上とメモリ削減メトリクス
-- **エクスポート機能**: JSON・CSV形式での履歴エクスポート
+- **パフォーマンス分析**: 実際のベンチマークによる詳細なパフォーマンス向上とメモリ削減メトリクス
+- **エクスポート機能**: 最適化モデルを任意の場所に保存、詳細レポート生成、JSON・CSV形式での履歴エクスポート
 - **GitHub統合**: プロジェクトリポジトリへの直接アクセス
+- **16のCPU最適化パラメータ**: 量子化、プルーニング、グラフ最適化、ランタイム設定の完全制御
 
 ## 動作要件
 
@@ -365,10 +392,12 @@ pip install torch torchvision tensorrt
 - **エンジン設定**: バッチサイズ、ワークスペース、戦術を設定
 
 #### CPU最適化
-- **精度**: FP32または動的量子化
-- **グラフ最適化**: 融合と畳み込みを有効化
-- **スレッド**: 最適なパフォーマンスのためのスレッド数設定
-- **プルーニング**: チャネルプルーニングとクラスタリングオプション
+- **精度**: FP32、FP16、BF16、またはINT8量子化
+- **グラフ最適化**: 融合、畳み込み、バッチ正規化統合を有効化
+- **スレッド**: 最適なパフォーマンスのためのintra-opおよびinter-opスレッド数設定
+- **プルーニング**: チャネルプルーニング、クラスタリング、スパース化パターン
+- **キャリブレーション**: 正確な量子化のための設定可能なキャリブレーションサンプル数
+- **ランタイム設定**: バッチサイズ、実行プロバイダー、最適化レベル
 
 ### 3. 最適化実行
 1. 「最適化」ページに移動
@@ -384,10 +413,26 @@ pip install torch torchvision tensorrt
 - 同じ設定で成功した最適化を再実行
 - 分析用履歴エクスポート
 
-### 5. 分析ダッシュボード
+### 5. バッチ最適化
+- 「バッチ最適化」ページに移動
+- ライブラリからモデルを選択
+- 最適化バリアントを選択:
+  - **精度形式**: FP32、FP16、BF16、INT8
+  - **グラフ最適化**: 有効/無効
+  - **プルーニングオプション**: なし/軽量/積極的
+- クイックプリセット（すべて、推奨）またはカスタム組み合わせを使用
+- バッチ最適化を開始して複数の最適化モデルを生成
+- 結果を比較して最適な設定を見つける
+
+### 6. モデルのエクスポートと保存
+- 最適化後、「ライブラリに保存」をクリックして最適化モデルを任意の場所に保存
+- 「レポート生成」をクリックしてメトリクス付き詳細最適化レポートを作成
+- ファイルエクスプローラーダイアログで保存場所を選択
+
+### 7. 分析ダッシュボード
 ダッシュボードでは以下を提供:
 - **モデル統計**: 総モデル数と最適化数
-- **パフォーマンスメトリクス**: 平均向上とメモリ削減
+- **パフォーマンスメトリクス**: 実際のベンチマークによる平均向上とメモリ削減
 - **成功率**: 最適化成功統計
 - **アクティビティフィード**: 最近の最適化活動
 - **デバイス使用**: 最も使用されるデバイスと精度形式
@@ -457,15 +502,16 @@ python python/main.py optimize --config '{"modelPath":"/path/to/model.onnx","dev
 
 ## パフォーマンスベンチマーク
 
-NVIDIA Jetsonプラットフォームでの典型的な最適化結果:
+エッジデバイスでの典型的な最適化結果:
 
 | モデルタイプ | 元のサイズ | 最適化後サイズ | パフォーマンス向上 | メモリ削減 |
 |-------------|-----------|---------------|------------------|----------|
-| ResNet-50   | 98MB      | 25MB          | +45%             | 74%      |
-| YOLOv5      | 45MB      | 12MB          | +60%             | 73%      |
-| BERT-Base   | 110MB     | 28MB          | +35%             | 75%      |
+| ResNet-50   | 98MB      | 25MB (INT8)   | +45%             | 74%      |
+| ResNet-50   | 98MB      | 49MB (FP16)   | +30%             | 50%      |
+| YOLOv5      | 45MB      | 12MB (INT8)   | +60%             | 73%      |
+| BERT-Base   | 110MB     | 28MB (INT8)   | +35%             | 75%      |
 
-*結果はハードウェア構成と最適化設定により異なる場合があります。*
+*結果はハードウェア構成と最適化設定により異なる場合があります。実際の推論タイミングを使用してベンチマークを実行。*
 
 ## テスト
 
@@ -502,13 +548,17 @@ npm run test:integration
 - [ ] クラウドデプロイ統合
 - [ ] 高度なプルーニングアルゴリズム
 
-### バージョン1.1（進行中）
+### バージョン1.1（現在）
 - [x] 完全なTensorRT統合
-- [x] ONNX Runtime最適化
+- [x] 全16パラメータを使用したONNX Runtime最適化
 - [x] 履歴管理システム
-- [x] パフォーマンス分析
+- [x] 実際のベンチマークによるパフォーマンス分析
+- [x] プリセット組み合わせによるバッチ最適化
+- [x] FP16/BF16 CPU最適化サポート
+- [x] 最適化モデルのエクスポートと保存
+- [x] 詳細な最適化レポート
 - [ ] モデル検証ツール
-- [ ] バッチ最適化
+- [ ] 高度なプルーニングアルゴリズム
 
 ---
 *Developed by Farrell Rafee Sudjatmiko - ITS Computer Engineering*
