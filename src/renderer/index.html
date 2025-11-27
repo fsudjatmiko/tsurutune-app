@@ -78,6 +78,17 @@
                         </div>
                         <span class="nav-label">Optimize</span>
                     </div>
+                    <div class="nav-item" data-page="batch">
+                        <div class="nav-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"/>
+                                <rect x="14" y="3" width="7" height="7"/>
+                                <rect x="14" y="14" width="7" height="7"/>
+                                <rect x="3" y="14" width="7" height="7"/>
+                            </svg>
+                        </div>
+                        <span class="nav-label">Batch Optimize</span>
+                    </div>
                     <div class="nav-item" data-page="history">
                         <div class="nav-icon">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -454,9 +465,10 @@
                                         <div class="config-group">
                                             <label for="cpuPrecision">Precision</label>
                                             <select id="cpuPrecision" class="config-select">
-                                                <option value="fp32" selected>FP32</option>
-                                                <option value="bf16">BF16</option>
-                                                <option value="int8">INT8</option>
+                                                <option value="fp32" selected>FP32 (Full Precision)</option>
+                                                <option value="fp16">FP16 (Half Precision)</option>
+                                                <option value="bf16">BF16 (Brain Float)</option>
+                                                <option value="int8">INT8 (Quantized)</option>
                                             </select>
                                         </div>
                                     </div>
@@ -766,6 +778,183 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Batch Optimize Page -->
+                <div class="page" id="batchPage" style="display: none;">
+                    <div class="page-header">
+                        <h1>Batch Optimization</h1>
+                        <p>Generate multiple optimized models with different configurations for benchmarking</p>
+                    </div>
+
+                    <!-- Step 1: Model Selection -->
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="step-number">1</div>
+                            <h2>Select Model</h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="config-group">
+                                <label for="batchModelSelect">Pick a Model</label>
+                                <select id="batchModelSelect" class="config-select">
+                                    <option value="">Choose from your uploaded models...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Step 2: Device Selection -->
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="step-number">2</div>
+                            <h2>Target Device</h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="config-group">
+                                <label for="batchDeviceSelect">Device</label>
+                                <select id="batchDeviceSelect" class="config-select">
+                                    <option value="cpu">CPU</option>
+                                    <option value="cuda">CUDA (GPU)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Step 3: Configuration Presets -->
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="step-number">3</div>
+                            <h2>Select Optimization Variants</h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="batch-presets">
+                                <div class="preset-category">
+                                    <h3>Precision Variants</h3>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchFP32" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchFP32">FP32 (Baseline)</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchFP16" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchFP16">FP16 (Half Precision)</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchBF16">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchBF16">BF16 (Brain Float)</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchINT8" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchINT8">INT8 (Quantized)</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="preset-category">
+                                    <h3>Graph Optimization Variants</h3>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchNoGraphOpt">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchNoGraphOpt">Without Graph Optimizations</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchWithGraphOpt" checked>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchWithGraphOpt">With All Graph Optimizations</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="preset-category">
+                                    <h3>Pruning Variants (CPU Only)</h3>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchPruning20">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchPruning20">20% Channel Pruning</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="batchPruning40">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label for="batchPruning40">40% Channel Pruning</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="preset-category">
+                                    <h3>Quick Presets</h3>
+                                    <div class="preset-buttons">
+                                        <button class="btn btn-secondary" onclick="selectAllBatchPresets()">Select All</button>
+                                        <button class="btn btn-secondary" onclick="selectRecommendedBatchPresets()">Recommended</button>
+                                        <button class="btn btn-secondary" onclick="clearAllBatchPresets()">Clear All</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="batch-summary">
+                                <h3>Summary</h3>
+                                <p>Selected variants: <strong id="batchVariantCount">3</strong></p>
+                                <p>Estimated time: <strong id="batchEstimatedTime">~15 minutes</strong></p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Step 4: Start Batch Optimization -->
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="step-number">4</div>
+                            <h2>Start Batch Optimization</h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="optimization-controls">
+                                <button class="optimize-btn" id="batchOptimizeBtn" disabled>
+                                    <span class="btn-text">Start Batch Optimization</span>
+                                    <div class="btn-spinner" style="display: none;"></div>
+                                </button>
+                                <p class="optimization-note">
+                                    This will create multiple optimized models. You can compare them in the History page.
+                                </p>
+                            </div>
+
+                            <!-- Progress Section -->
+                            <div id="batchProgressSection" style="display: none; margin-top: 2rem;">
+                                <h3>Optimization Progress</h3>
+                                <div class="batch-progress-container">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="batchProgressBar" style="width: 0%;"></div>
+                                    </div>
+                                    <p class="progress-text">
+                                        <span id="batchProgressText">Optimizing 1 of 3...</span>
+                                    </p>
+                                </div>
+
+                                <div class="batch-results-list" id="batchResultsList">
+                                    <!-- Results will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </main>
         </div>

@@ -411,8 +411,11 @@ class CudaOptimizer:
         timestamp = int(time.time())
         
         output_name = f"{input_path.stem}_{device}_{precision}_{timestamp}.engine"
-        output_dir = input_path.parent / "optimized"
-        output_dir.mkdir(exist_ok=True)
+        
+        # Save to project root models/optimized/ directory
+        project_root = Path(__file__).resolve().parents[2]  # Go up from optimizers/ -> python/ -> project root
+        output_dir = project_root / "models" / "optimized"
+        output_dir.mkdir(parents=True, exist_ok=True)
         
         return output_dir / output_name
     

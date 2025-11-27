@@ -315,6 +315,24 @@ ipcMain.handle('copy-file', async (event, sourcePath, destPath) => {
   }
 });
 
+ipcMain.handle('write-file', async (event, filePath, content) => {
+  try {
+    // Create directory if it doesn't exist
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    // Write the file
+    fs.writeFileSync(filePath, content, 'utf8');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Write file error:', error);
+    throw error;
+  }
+});
+
 ipcMain.handle('start-optimization', async (event, config) => {
   try {
     console.log('Starting optimization with config:', config);

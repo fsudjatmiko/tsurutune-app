@@ -71,6 +71,13 @@ function setupEventListeners() {
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', clearOptimizationHistory);
     
+    // Export/Report buttons (optimize page results section)
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) exportBtn.addEventListener('click', saveOptimizedModelToFile);
+    
+    const reportBtn = document.getElementById('reportBtn');
+    if (reportBtn) reportBtn.addEventListener('click', generateOptimizationReport);
+    
     // Modal events
     const parameterModal = document.getElementById('parameterModal');
     if (parameterModal) {
@@ -125,6 +132,9 @@ function loadPageData(pageId) {
             break;
         case 'optimize':
             updateModelSelector();
+            break;
+        case 'batch':
+            initializeBatchOptimizePage();
             break;
         case 'models':
             updateModelsGrid();
@@ -1106,9 +1116,9 @@ async function startOptimization() {
             channel_pruning: parseFloat(document.getElementById('cpuChannelPruning')?.value || '0'),
             clustering: document.getElementById('cpuClustering')?.checked || false,
             // Graph Tweaks
-            graph_fusion: document.getElementById('cpuGraphFusion')?.checked ? 'on' : 'off',
-            constant_folding: document.getElementById('cpuConstantFolding')?.checked ? 'on' : 'off',
-            bn_folding: document.getElementById('cpuBnFolding')?.checked ? 'on' : 'off',
+            graph_fusion: document.getElementById('cpuGraphFusion')?.checked || false,
+            constant_folding: document.getElementById('cpuConstantFolding')?.checked || false,
+            bn_folding: document.getElementById('cpuBnFolding')?.checked || false,
             // Engine / Runtime
             batch_size: parseInt(document.getElementById('cpuBatchSize')?.value || '1'),
             num_threads: parseInt(document.getElementById('cpuNumThreads')?.value || '4'),
@@ -1224,21 +1234,24 @@ function updateProgress(percent, status) {
 }
 
 function showOptimizationResults(result) {
+    // Store the last optimization result for export/report functions
+    lastOptimizationResult = result;
+    
     // Update result values
     const optimizationTime = document.getElementById('optimizationTime');
     const performanceGain = document.getElementById('performanceGain');
     const memoryReduction = document.getElementById('memoryReduction');
     const resultsSection = document.getElementById('resultsSection');
     
-    if (optimizationTime) optimizationTime.textContent = `${result.optimizationTime}s`;
-    if (performanceGain) performanceGain.textContent = result.performanceGain;
-    if (memoryReduction) memoryReduction.textContent = result.memoryReduction;
+    if (optimizationTime) optimizationTime.textContent = `${result.duration?.toFixed(2) || result.optimizationTime || '--'}s`;
+    if (performanceGain) performanceGain.textContent = result.performanceGain || '--';
+    if (memoryReduction) memoryReduction.textContent = result.memoryReduction || '--';
     
     // Show results section
     if (resultsSection) resultsSection.style.display = 'block';
     
     // Create performance chart
-    createPerformanceChart();
+    createPerformanceChart(result);
 }
 
 function createPerformanceChart() {
@@ -1465,6 +1478,148 @@ async function exportOptimizedModel(recordId) {
         showError(`Failed to export optimized model: ${error.message}`);
         updateStatus('error', 'Export failed');
     }
+}
+
+// Global variable to store last optimization result
+let lastOptimizationResult = null;
+
+async function saveOptimizedModelToFile() {
+    if (!lastOptimizationResult || !lastOptimizationResult.optimizedPath) {
+        showError('No optimized model available to save. Please complete an optimization first.');
+        return;
+    }
+    
+    try {
+        updateStatus('processing', 'Selecting save location...');
+        
+        // Get model info for default filename
+        const modelName = currentModel?.name || 'model';
+        const device = document.getElementById('deviceSelect')?.value || 'unknown';
+        const precision = device === 'cpu' 
+            ? (document.getElementById('cpuPrecision')?.value || 'optimized')
+            : (document.getElementById('cudaPrecision')?.value || 'optimized');
+        
+        const fileExtension = lastOptimizationResult.optimizedPath.split('.').pop() || 'model';
+        const defaultFilename = `${modelName}_${device}_${precision}.${fileExtension}`;
+        
+        // Open save dialog
+        const savePath = await window.electronAPI.showSaveDialog({
+            title: 'Save Optimized Model',
+            defaultPath: defaultFilename,
+            filters: [
+                { name: 'Model Files', extensions: [fileExtension] },
+                { name: 'All Files', extensions: ['*'] }
+            ]
+        });
+        
+        if (savePath) {
+            // Copy the optimized model to the selected location
+            await window.electronAPI.copyFile(lastOptimizationResult.optimizedPath, savePath);
+            updateStatus('ready', 'Model saved successfully');
+            showSuccess(`Model saved to: ${savePath}`);
+        } else {
+            updateStatus('ready', 'Save cancelled');
+        }
+        
+    } catch (error) {
+        console.error('Save model error:', error);
+        showError(`Failed to save model: ${error.message}`);
+        updateStatus('error', 'Save failed');
+    }
+}
+
+async function generateOptimizationReport() {
+    if (!lastOptimizationResult) {
+        showError('No optimization data available. Please complete an optimization first.');
+        return;
+    }
+    
+    try {
+        updateStatus('processing', 'Generating report...');
+        
+        const modelName = currentModel?.name || 'model';
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+        const defaultFilename = `${modelName}_optimization_report_${timestamp}.txt`;
+        
+        // Open save dialog
+        const savePath = await window.electronAPI.showSaveDialog({
+            title: 'Save Optimization Report',
+            defaultPath: defaultFilename,
+            filters: [
+                { name: 'Text Files', extensions: ['txt'] },
+                { name: 'JSON Files', extensions: ['json'] },
+                { name: 'All Files', extensions: ['*'] }
+            ]
+        });
+        
+        if (savePath) {
+            // Generate report content
+            const report = generateReportContent(lastOptimizationResult);
+            
+            // Write report to file
+            const fs = require('fs');
+            if (savePath.endsWith('.json')) {
+                await window.electronAPI.writeFile(savePath, JSON.stringify(lastOptimizationResult, null, 2));
+            } else {
+                await window.electronAPI.writeFile(savePath, report);
+            }
+            
+            updateStatus('ready', 'Report saved successfully');
+            showSuccess(`Report saved to: ${savePath}`);
+        } else {
+            updateStatus('ready', 'Report generation cancelled');
+        }
+        
+    } catch (error) {
+        console.error('Generate report error:', error);
+        showError(`Failed to generate report: ${error.message}`);
+        updateStatus('error', 'Report generation failed');
+    }
+}
+
+function generateReportContent(result) {
+    const device = document.getElementById('deviceSelect')?.value || 'unknown';
+    const modelName = currentModel?.name || 'Unknown Model';
+    const timestamp = new Date().toLocaleString();
+    
+    return `
+==============================================
+    TSURUTUNE OPTIMIZATION REPORT
+==============================================
+
+Model: ${modelName}
+Date: ${timestamp}
+Target Device: ${device.toUpperCase()}
+
+----------------------------------------------
+OPTIMIZATION RESULTS
+----------------------------------------------
+
+Performance Gain:     ${result.performanceGain || 'N/A'}
+Memory Reduction:     ${result.memoryReduction || 'N/A'}
+Optimization Time:    ${result.duration?.toFixed(2) || 'N/A'}s
+
+Original Size:        ${result.originalSize ? (result.originalSize / (1024 * 1024)).toFixed(2) + ' MB' : 'N/A'}
+Optimized Size:       ${result.optimizedSize ? (result.optimizedSize / (1024 * 1024)).toFixed(2) + ' MB' : 'N/A'}
+
+----------------------------------------------
+OPTIMIZATION CONFIGURATION
+----------------------------------------------
+
+${result.optimization_info ? Object.entries(result.optimization_info)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('\n') : 'No configuration details available'}
+
+----------------------------------------------
+FILE PATHS
+----------------------------------------------
+
+Optimized Model: ${result.optimizedPath || 'N/A'}
+
+==============================================
+    Generated by TsuruTune v1.0.0
+==============================================
+`;
 }
 
 function optimizeExistingModel(modelId) {
@@ -1812,6 +1967,298 @@ function deviceDetails(deviceId) {
     }
 }
 
+// ===========================
+// Batch Optimization Functions
+// ===========================
+
+let batchOptimizationInProgress = false;
+let batchResults = [];
+
+// Initialize batch optimize page when navigating to it
+function initializeBatchOptimizePage() {
+    const batchModelSelect = document.getElementById('batchModelSelect');
+    const batchOptimizeBtn = document.getElementById('batchOptimizeBtn');
+    const batchDeviceSelect = document.getElementById('batchDeviceSelect');
+    
+    // Populate model select
+    if (batchModelSelect) {
+        batchModelSelect.innerHTML = '<option value="">Choose from your uploaded models...</option>';
+        modelLibrary.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model.id;
+            option.textContent = `${model.name} (${model.type})`;
+            batchModelSelect.appendChild(option);
+        });
+        
+        batchModelSelect.addEventListener('change', updateBatchOptimizeButton);
+    }
+    
+    if (batchOptimizeBtn) {
+        batchOptimizeBtn.addEventListener('click', startBatchOptimization);
+    }
+    
+    if (batchDeviceSelect) {
+        batchDeviceSelect.addEventListener('change', updateBatchOptimizeButton);
+    }
+    
+    // Add listeners to all checkboxes
+    const checkboxes = ['batchFP32', 'batchFP16', 'batchBF16', 'batchINT8', 
+                        'batchNoGraphOpt', 'batchWithGraphOpt', 
+                        'batchPruning20', 'batchPruning40'];
+    checkboxes.forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.addEventListener('change', updateBatchSummary);
+        }
+    });
+    
+    updateBatchSummary();
+}
+
+function updateBatchOptimizeButton() {
+    const batchModelSelect = document.getElementById('batchModelSelect');
+    const batchOptimizeBtn = document.getElementById('batchOptimizeBtn');
+    
+    if (batchOptimizeBtn && batchModelSelect) {
+        const hasModel = batchModelSelect.value !== '';
+        const hasVariants = getSelectedBatchVariants().length > 0;
+        batchOptimizeBtn.disabled = !hasModel || !hasVariants || batchOptimizationInProgress;
+    }
+}
+
+function getSelectedBatchVariants() {
+    const variants = [];
+    const device = document.getElementById('batchDeviceSelect')?.value || 'cpu';
+    
+    // Precision variants
+    const precisions = [];
+    if (document.getElementById('batchFP32')?.checked) precisions.push('fp32');
+    if (document.getElementById('batchFP16')?.checked) precisions.push('fp16');
+    if (document.getElementById('batchBF16')?.checked) precisions.push('bf16');
+    if (document.getElementById('batchINT8')?.checked) precisions.push('int8');
+    
+    // Graph optimization variants
+    const graphOpts = [];
+    if (document.getElementById('batchNoGraphOpt')?.checked) graphOpts.push(false);
+    if (document.getElementById('batchWithGraphOpt')?.checked) graphOpts.push(true);
+    
+    // Pruning variants (CPU only)
+    const pruning = [0];
+    if (device === 'cpu') {
+        if (document.getElementById('batchPruning20')?.checked) pruning.push(20);
+        if (document.getElementById('batchPruning40')?.checked) pruning.push(40);
+    }
+    
+    // Generate all combinations
+    precisions.forEach(precision => {
+        graphOpts.forEach(graphOpt => {
+            pruning.forEach(pruningLevel => {
+                variants.push({
+                    name: `${precision.toUpperCase()}${graphOpt ? '+GraphOpt' : ''}${pruningLevel > 0 ? `+Prune${pruningLevel}%` : ''}`,
+                    precision,
+                    graphOpt,
+                    pruningLevel
+                });
+            });
+        });
+    });
+    
+    return variants;
+}
+
+function updateBatchSummary() {
+    const variants = getSelectedBatchVariants();
+    const variantCount = document.getElementById('batchVariantCount');
+    const estimatedTime = document.getElementById('batchEstimatedTime');
+    
+    if (variantCount) {
+        variantCount.textContent = variants.length;
+    }
+    
+    if (estimatedTime) {
+        const minutes = Math.ceil(variants.length * 5); // Estimate 5 minutes per variant
+        estimatedTime.textContent = `~${minutes} minutes`;
+    }
+    
+    updateBatchOptimizeButton();
+}
+
+async function startBatchOptimization() {
+    if (batchOptimizationInProgress) return;
+    
+    const batchModelSelect = document.getElementById('batchModelSelect');
+    const selectedModelId = batchModelSelect.value;
+    
+    if (!selectedModelId) {
+        showError('Please select a model first');
+        return;
+    }
+    
+    const model = modelLibrary.find(m => m.id === selectedModelId);
+    if (!model) {
+        showError('Selected model not found');
+        return;
+    }
+    
+    // Get the correct model path (try multiple properties for compatibility)
+    const modelPath = model.local_path || model.path || model.originalPath;
+    
+    if (!modelPath) {
+        showError('Model path not found. Please re-import the model.');
+        return;
+    }
+    
+    const variants = getSelectedBatchVariants();
+    if (variants.length === 0) {
+        showError('Please select at least one variant');
+        return;
+    }
+    
+    batchOptimizationInProgress = true;
+    batchResults = [];
+    
+    const batchOptimizeBtn = document.getElementById('batchOptimizeBtn');
+    const batchProgressSection = document.getElementById('batchProgressSection');
+    const batchProgressBar = document.getElementById('batchProgressBar');
+    const batchProgressText = document.getElementById('batchProgressText');
+    const batchResultsList = document.getElementById('batchResultsList');
+    
+    // Show progress section
+    if (batchProgressSection) batchProgressSection.style.display = 'block';
+    if (batchResultsList) batchResultsList.innerHTML = '';
+    
+    // Update button state
+    if (batchOptimizeBtn) {
+        batchOptimizeBtn.querySelector('.btn-text').textContent = 'Optimizing...';
+        batchOptimizeBtn.querySelector('.btn-spinner').style.display = 'inline-block';
+        batchOptimizeBtn.disabled = true;
+    }
+    
+    updateStatus('busy', 'Batch Optimization in Progress');
+    
+    const device = document.getElementById('batchDeviceSelect')?.value || 'cpu';
+    
+    // Process each variant
+    for (let i = 0; i < variants.length; i++) {
+        const variant = variants[i];
+        
+        // Update progress
+        const progress = ((i) / variants.length) * 100;
+        if (batchProgressBar) batchProgressBar.style.width = `${progress}%`;
+        if (batchProgressText) batchProgressText.textContent = `Optimizing ${i + 1} of ${variants.length}: ${variant.name}`;
+        
+        // Build configuration
+        const config = {
+            modelPath: modelPath,
+            device: device,
+            precision: variant.precision,
+            enable_quantization: variant.precision === 'int8',
+            graph_fusion: variant.graphOpt,
+            constant_folding: variant.graphOpt,
+            bn_folding: variant.graphOpt,
+            channel_pruning: variant.pruningLevel,
+            batch_size: 1,
+            num_threads: 4,
+            intra_op_threads: 4,
+            inter_op_threads: 2
+        };
+        
+        // Add CPU-specific parameters
+        if (device === 'cpu') {
+            config.per_channel_quantization = variant.precision === 'int8';
+            config.calibration_samples = 100;
+        }
+        
+        try {
+            const result = await window.electronAPI.startOptimization(config);
+            
+            batchResults.push({
+                variant: variant.name,
+                success: result.success,
+                result: result
+            });
+            
+            // Add result to list
+            if (batchResultsList) {
+                const resultItem = document.createElement('div');
+                resultItem.className = `batch-result-item ${result.success ? 'success' : 'error'}`;
+                resultItem.innerHTML = `
+                    <div class="result-icon">
+                        ${result.success ? '✓' : '✗'}
+                    </div>
+                    <div class="result-info">
+                        <strong>${variant.name}</strong>
+                        <p>${result.success ? `Performance: ${result.performanceGain}, Size: ${result.memoryReduction}` : `Error: ${result.error}`}</p>
+                    </div>
+                `;
+                batchResultsList.appendChild(resultItem);
+            }
+            
+        } catch (error) {
+            console.error(`Failed to optimize ${variant.name}:`, error);
+            batchResults.push({
+                variant: variant.name,
+                success: false,
+                error: error.message
+            });
+        }
+    }
+    
+    // Complete
+    if (batchProgressBar) batchProgressBar.style.width = '100%';
+    if (batchProgressText) batchProgressText.textContent = `Complete! Optimized ${variants.length} variants`;
+    
+    if (batchOptimizeBtn) {
+        batchOptimizeBtn.querySelector('.btn-text').textContent = 'Start Batch Optimization';
+        batchOptimizeBtn.querySelector('.btn-spinner').style.display = 'none';
+        batchOptimizeBtn.disabled = false;
+    }
+    
+    batchOptimizationInProgress = false;
+    updateStatus('ready', 'Batch Optimization Complete');
+    
+    const successCount = batchResults.filter(r => r.success).length;
+    showSuccess(`Batch optimization complete! ${successCount} of ${variants.length} variants created successfully.`);
+    
+    // Refresh history
+    await loadOptimizationHistory();
+}
+
+function selectAllBatchPresets() {
+    const checkboxes = ['batchFP32', 'batchFP16', 'batchBF16', 'batchINT8', 
+                        'batchNoGraphOpt', 'batchWithGraphOpt', 
+                        'batchPruning20', 'batchPruning40'];
+    checkboxes.forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = true;
+    });
+    updateBatchSummary();
+}
+
+function selectRecommendedBatchPresets() {
+    // Clear all first
+    clearAllBatchPresets();
+    
+    // Select recommended: FP32, FP16, INT8 with graph optimizations
+    const recommended = ['batchFP32', 'batchFP16', 'batchINT8', 'batchWithGraphOpt'];
+    recommended.forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = true;
+    });
+    updateBatchSummary();
+}
+
+function clearAllBatchPresets() {
+    const checkboxes = ['batchFP32', 'batchFP16', 'batchBF16', 'batchINT8', 
+                        'batchNoGraphOpt', 'batchWithGraphOpt', 
+                        'batchPruning20', 'batchPruning40'];
+    checkboxes.forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = false;
+    });
+    updateBatchSummary();
+}
+
 // Export functions for potential use
 window.TsuruTune = {
     navigateToPage,
@@ -1822,3 +2269,8 @@ window.TsuruTune = {
     scanForDevices,
     runBenchmark
 };
+
+// Make batch functions global
+window.selectAllBatchPresets = selectAllBatchPresets;
+window.selectRecommendedBatchPresets = selectRecommendedBatchPresets;
+window.clearAllBatchPresets = clearAllBatchPresets;

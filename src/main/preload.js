@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectModelFile: () => ipcRenderer.invoke('select-model-file'),
   showSaveDialog: (options) => ipcRenderer.invoke('show-save-dialog', options),
   copyFile: (sourcePath, destPath) => ipcRenderer.invoke('copy-file', sourcePath, destPath),
+  writeFile: (filePath, content) => ipcRenderer.invoke('write-file', filePath, content),
   
   // Optimization operations
   startOptimization: (config) => ipcRenderer.invoke('start-optimization', config),

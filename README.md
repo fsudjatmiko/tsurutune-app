@@ -1,273 +1,514 @@
 # TsuruTune - Jetson Deep Learning Optimizer
 
+**[English](#english) | [日本語](#日本語-japanese)**
+
+---
+
+<a name="english"></a>
+## English
+
 TsuruTune is a comprehensive deep learning model optimization tool designed specifically for NVIDIA Jetson platforms. It leverages Tensor Core acceleration and memory bandwidth alignment to achieve optimal performance for deep learning inference on edge devices.
 
-TsuruTuneは、NVIDIA Jetsonプラットフォーム専用に設計された包括的な深層学習モデル最適化ツールです。Tensor Coreアクセラレーションとメモリ帯域幅アライメントを活用して、エッジデバイスでの深層学習推論の最適なパフォーマンスを実現します。
+## Features
 
-## Features | 機能
-
-### Model Optimization | モデル最適化
+### Model Optimization
 - **TensorRT Integration**: Full TensorRT optimization with CUDA support
-- **TensorRT統合**: CUDAサポートによる完全なTensorRT最適化
 - **ONNX Runtime**: Comprehensive CPU optimization with quantization
-- **ONNX Runtime**: 量子化を含む包括的なCPU最適化
 - **Multiple Precision Formats**: FP32, FP16, BF16, INT8 support
-- **複数精度形式**: FP32、FP16、BF16、INT8サポート
 - **Advanced Quantization**: Per-channel, symmetric, and KV-cache quantization
-- **高度な量子化**: チャネル毎、対称、KVキャッシュ量子化
 - **Pruning & Sparsity**: Structured and unstructured pruning patterns
-- **プルーニング＆スパース化**: 構造化・非構造化プルーニングパターン
 - **Graph Optimizations**: Batch normalization folding, constant folding, graph fusion
-- **グラフ最適化**: バッチ正規化畳み込み、定数畳み込み、グラフ融合
 
-### User Interface | ユーザーインターフェース
+### User Interface
 - **Modern Electron App**: Cross-platform desktop application
-- **モダンElectronアプリ**: クロスプラットフォームデスクトップアプリケーション
 - **Intuitive Dashboard**: Real-time optimization statistics and trends
-- **直感的なダッシュボード**: リアルタイム最適化統計とトレンド
 - **History Management**: Complete optimization history with parameter tracking
-- **履歴管理**: パラメータ追跡による完全な最適化履歴
 - **Device Configuration**: Separate optimization panels for CUDA and CPU
-- **デバイス設定**: CUDAとCPU用の個別最適化パネル
 - **Progress Tracking**: Real-time optimization progress visualization
-- **進捗追跡**: リアルタイム最適化進捗可視化
 
-### Advanced Features | 高度な機能
+### Advanced Features
 - **Local Model Storage**: Organized model management with metadata
-- **ローカルモデルストレージ**: メタデータ付き整理されたモデル管理
 - **Optimization History**: Persistent history with rerun capabilities
-- **最適化履歴**: 再実行機能付き永続履歴
 - **Performance Analytics**: Detailed performance gain and memory reduction metrics
-- **パフォーマンス分析**: 詳細なパフォーマンス向上とメモリ削減メトリクス
 - **Export Capabilities**: History export in JSON and CSV formats
-- **エクスポート機能**: JSON・CSV形式での履歴エクスポート
 - **GitHub Integration**: Direct access to project repository
-- **GitHub統合**: プロジェクトリポジトリへの直接アクセス
 
-## Requirements | 動作要件
+## Requirements
 
-### System Requirements | システム要件
-- **Operating System | オペレーティングシステム**: Windows 10+, macOS 10.14+, Ubuntu 18.04+
-- **Node.js**: Version 16.0 or higher | バージョン16.0以上
-- **Python**: Version 3.8 or higher | バージョン3.8以上
-- **Memory | メモリ**: 4GB RAM minimum, 8GB recommended | 最小4GB RAM、推奨8GB
+### System Requirements
+- **Operating System**: Windows 10+, macOS 10.14+, Ubuntu 18.04+
+- **Node.js**: Version 16.0 or higher
+- **Python**: Version 3.8 or higher
+- **Memory**: 4GB RAM minimum, 8GB recommended
 
-### For CUDA Optimization (Optional) | CUDA最適化用（オプション）
-- **NVIDIA GPU**: CUDA-compatible GPU | CUDA対応GPU
-- **CUDA Toolkit**: Version 11.0 or higher | バージョン11.0以上
-- **TensorRT**: Version 8.6 or higher | バージョン8.6以上
-- **PyTorch**: Version 2.0 or higher | バージョン2.0以上
+### For CUDA Optimization (Optional)
+- **NVIDIA GPU**: CUDA-compatible GPU
+- **CUDA Toolkit**: Version 11.0 or higher
+- **TensorRT**: Version 8.6 or higher
+- **PyTorch**: Version 2.0 or higher
 
-### For CPU Optimization | CPU最適化用
-- **ONNX Runtime**: Automatically installed | 自動インストール
-- **NumPy**: Automatically installed | 自動インストール
+### For CPU Optimization
+- **ONNX Runtime**: Automatically installed
+- **NumPy**: Automatically installed
 
-## Installation | インストール
+## Installation
 
-### Quick Setup | クイックセットアップ
-1. **Clone the repository | リポジトリをクローン:**
+### Quick Setup
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/fsudjatmiko/tsurutune-app.git
    cd tsurutune-app
    ```
 
-2. **Install Node.js dependencies | Node.js依存関係をインストール:**
+2. **Install Node.js dependencies:**
    ```bash
    npm install
    ```
 
-3. **Setup Python environment | Python環境をセットアップ:**
+3. **Setup Python environment:**
    ```bash
-   # On macOS/Linux | macOS/Linux
+   # On macOS/Linux
    ./setup.sh
    
    # On Windows
    setup.bat
    ```
 
-4. **Start the application | アプリケーションを起動:**
+4. **Start the application:**
    ```bash
    npm start
    ```
 
-### Manual Python Setup | 手動Python設定
-If you prefer manual setup | 手動設定を希望する場合:
+### Manual Python Setup
+If you prefer manual setup:
 
 ```bash
-# Create virtual environment | 仮想環境を作成
+# Create virtual environment
 python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# Install dependencies | 依存関係をインストール
+# Install dependencies
 pip install -r python/requirements.txt
 
-# For CUDA support (optional) | CUDAサポート用（オプション）
+# For CUDA support (optional)
 pip install torch torchvision tensorrt
 ```
 
-## 📖 Usage Guide | 使用方法
+## 📖 Usage Guide
 
-### 1. Model Import | モデルインポート
-- Click "Add New Model" on the dashboard | ダッシュボードで「新しいモデルを追加」をクリック
-- Select your ONNX, PyTorch (.pt/.pth), or TensorFlow (.pb) model | ONNX、PyTorch（.pt/.pth）、またはTensorFlow（.pb）モデルを選択
-- The model will be imported into local storage | モデルがローカルストレージにインポートされます
+### 1. Model Import
+- Click "Add New Model" on the dashboard
+- Select your ONNX, PyTorch (.pt/.pth), or TensorFlow (.pb) model
+- The model will be imported into local storage
 
-### 2. Optimization Configuration | 最適化設定
+### 2. Optimization Configuration
 
-#### CUDA/GPU Optimization | CUDA/GPU最適化
-- **Precision | 精度**: Choose from FP32, FP16, BF16, or INT8 | FP32、FP16、BF16、またはINT8から選択
-- **Quantization | 量子化**: Configure per-channel and symmetric quantization | チャネル毎および対称量子化を設定
-- **Calibration | キャリブレーション**: Provide calibration dataset for INT8 | INT8用キャリブレーションデータセットを提供
-- **Pruning | プルーニング**: Set sparsity patterns and targets | スパース化パターンとターゲットを設定
-- **Engine Settings | エンジン設定**: Configure batch size, workspace, and tactics | バッチサイズ、ワークスペース、戦術を設定
+#### CUDA/GPU Optimization
+- **Precision**: Choose from FP32, FP16, BF16, or INT8
+- **Quantization**: Configure per-channel and symmetric quantization
+- **Calibration**: Provide calibration dataset for INT8
+- **Pruning**: Set sparsity patterns and targets
+- **Engine Settings**: Configure batch size, workspace, and tactics
 
-#### CPU Optimization | CPU最適化
-- **Precision | 精度**: FP32 or dynamic quantization | FP32または動的量子化
-- **Graph Optimizations | グラフ最適化**: Enable fusion and folding | 融合と畳み込みを有効化
-- **Threading | スレッド**: Configure thread counts for optimal performance | 最適なパフォーマンスのためのスレッド数設定
-- **Pruning | プルーニング**: Channel pruning and clustering options | チャネルプルーニングとクラスタリングオプション
+#### CPU Optimization
+- **Precision**: FP32 or dynamic quantization
+- **Graph Optimizations**: Enable fusion and folding
+- **Threading**: Configure thread counts for optimal performance
+- **Pruning**: Channel pruning and clustering options
 
-### 3. Running Optimization | 最適化実行
-1. Navigate to the "Optimize" page | 「最適化」ページに移動
-2. Select your target device (CUDA or CPU) | ターゲットデバイス（CUDAまたはCPU）を選択
-3. Configure optimization parameters | 最適化パラメータを設定
-4. Click "Start Optimization" | 「最適化開始」をクリック
-5. Monitor real-time progress | リアルタイム進捗を監視
+### 3. Running Optimization
+1. Navigate to the "Optimize" page
+2. Select your target device (CUDA or CPU)
+3. Configure optimization parameters
+4. Click "Start Optimization"
+5. Monitor real-time progress
 
-### 4. History Management | 履歴管理
-- View all optimization attempts in the "History" page | 「履歴」ページですべての最適化試行を表示
-- Filter by device, status, or date | デバイス、ステータス、または日付でフィルタ
-- View detailed parameters for each optimization | 各最適化の詳細パラメータを表示
-- Rerun successful optimizations with the same settings | 同じ設定で成功した最適化を再実行
-- Export history for analysis | 分析用履歴エクスポート
+### 4. History Management
+- View all optimization attempts in the "History" page
+- Filter by device, status, or date
+- View detailed parameters for each optimization
+- Rerun successful optimizations with the same settings
+- Export history for analysis
 
-### 5. Analytics Dashboard | 分析ダッシュボード
-The dashboard provides | ダッシュボードでは以下を提供:
-- **Model Statistics | モデル統計**: Total models and optimizations | 総モデル数と最適化数
-- **Performance Metrics | パフォーマンスメトリクス**: Average gains and memory reduction | 平均向上とメモリ削減
-- **Success Rates | 成功率**: Optimization success statistics | 最適化成功統計
-- **Activity Feed | アクティビティフィード**: Recent optimization activities | 最近の最適化活動
-- **Device Usage | デバイス使用**: Most used devices and precision formats | 最も使用されるデバイスと精度形式
+### 5. Analytics Dashboard
+The dashboard provides:
+- **Model Statistics**: Total models and optimizations
+- **Performance Metrics**: Average gains and memory reduction
+- **Success Rates**: Optimization success statistics
+- **Activity Feed**: Recent optimization activities
+- **Device Usage**: Most used devices and precision formats
 
-## Architecture | アーキテクチャ
+## Architecture
 
-### Frontend (Electron) | フロントエンド（Electron）
+### Frontend (Electron)
 ```
 src/
-├── main/           # Electron main process | Electronメインプロセス
-│   ├── main.js     # Application entry point | アプリケーションエントリポイント
-│   └── preload.js  # IPC bridge | IPCブリッジ
-└── renderer/       # UI components | UIコンポーネント
-    ├── index.html  # Main interface | メインインターフェース
-    ├── renderer.js # Frontend logic | フロントエンドロジック
-    └── css/        # Styling | スタイリング
+├── main/           # Electron main process
+│   ├── main.js     # Application entry point
+│   └── preload.js  # IPC bridge
+└── renderer/       # UI components
+    ├── index.html  # Main interface
+    ├── renderer.js # Frontend logic
+    └── css/        # Styling
 ```
 
-### Backend (Python) | バックエンド（Python）
+### Backend (Python)
 ```
 python/
-├── main.py              # Backend entry point | バックエンドエントリポイント
-├── model_manager.py     # Model storage management | モデルストレージ管理
-├── history_manager.py   # Optimization history | 最適化履歴
+├── main.py              # Backend entry point
+├── model_manager.py     # Model storage management
+├── history_manager.py   # Optimization history
 ├── optimizers/
-│   ├── cuda_optimizer.py   # TensorRT optimization | TensorRT最適化
-│   └── cpu_optimizer.py    # ONNX Runtime optimization | ONNX Runtime最適化
+│   ├── cuda_optimizer.py   # TensorRT optimization
+│   └── cpu_optimizer.py    # ONNX Runtime optimization
 └── utils/
-    └── logger.py        # Logging utilities | ログユーティリティ
+    └── logger.py        # Logging utilities
 ```
 
-### Communication Flow | 通信フロー
-1. **Frontend | フロントエンド** → Electron IPC → **Main Process | メインプロセス**
-2. **Main Process | メインプロセス** → Python subprocess | Pythonサブプロセス → **Backend | バックエンド**
-3. **Backend | バックエンド** → JSON response | JSON応答 → **Main Process | メインプロセス**
-4. **Main Process | メインプロセス** → IPC response | IPC応答 → **Frontend | フロントエンド**
+### Communication Flow
+1. **Frontend** → Electron IPC → **Main Process**
+2. **Main Process** → Python subprocess → **Backend**
+3. **Backend** → JSON response → **Main Process**
+4. **Main Process** → IPC response → **Frontend**
 
-## 🔧 Development | 開発
+## 🔧 Development
 
-### Running in Development Mode | 開発モードで実行
+### Running in Development Mode
 ```bash
 npm run dev
 ```
 
-### Building for Production | プロダクション用ビルド
+### Building for Production
 ```bash
-# Build for current platform | 現在のプラットフォーム用ビルド
+# Build for current platform
 npm run build
 
-# Build for specific platforms | 特定プラットフォーム用ビルド
+# Build for specific platforms
 npm run build:win    # Windows
 npm run build:mac    # macOS
 npm run build:linux  # Linux
 ```
 
-### Python Backend Testing | Pythonバックエンドテスト
+### Python Backend Testing
 ```bash
-# Test system information | システム情報テスト
+# Test system information
 python python/main.py system
 
-# Test optimization history | 最適化履歴テスト
+# Test optimization history
 python python/main.py history
 
-# Test with configuration | 設定付きテスト
+# Test with configuration
 python python/main.py optimize --config '{"modelPath":"/path/to/model.onnx","device":"cpu"}'
 ```
 
-## Performance Benchmarks | パフォーマンスベンチマーク
+## Performance Benchmarks
 
-Typical optimization results on NVIDIA Jetson platforms | NVIDIA Jetsonプラットフォームでの典型的な最適化結果:
+Typical optimization results on NVIDIA Jetson platforms:
 
 | Model Type | Original Size | Optimized Size | Performance Gain | Memory Reduction |
 |------------|---------------|----------------|------------------|------------------|
-| モデルタイプ | 元のサイズ | 最適化後サイズ | パフォーマンス向上 | メモリ削減 |
 | ResNet-50  | 98MB         | 25MB          | +45%            | 74%             |
 | YOLOv5     | 45MB         | 12MB          | +60%            | 73%             |
 | BERT-Base  | 110MB        | 28MB          | +35%            | 75%             |
 
 *Results may vary based on hardware configuration and optimization settings.*
-*結果はハードウェア構成と最適化設定により異なる場合があります。*
 
-## Testing | テスト
+## Testing
 
-### Running Tests | テスト実行
+### Running Tests
 ```bash
-# Frontend tests | フロントエンドテスト
+# Frontend tests
 npm test
 
-# Python backend tests | Pythonバックエンドテスト
+# Python backend tests
 python -m pytest python/tests/
 
-# Integration tests | 統合テスト
+# Integration tests
 npm run test:integration
 ```
 
-### Code Style | コードスタイル
-- **JavaScript**: ESLint configuration included | ESLint設定を含む
-- **Python**: Follow PEP 8 guidelines | PEP 8ガイドラインに従う
-- **Commits**: Use conventional commit messages | 従来のコミットメッセージを使用
+### Code Style
+- **JavaScript**: ESLint configuration included
+- **Python**: Follow PEP 8 guidelines
+- **Commits**: Use conventional commit messages
 
-## Acknowledgments | 謝辞
+## Acknowledgments
 
-- **NVIDIA** for TensorRT and CUDA technologies | TensorRTとCUDA技術
-- **Microsoft** for ONNX Runtime | ONNX Runtime
-- **Electron** for the cross-platform framework | クロスプラットフォームフレームワーク
-- **Open Source Community** for various libraries and tools | 各種ライブラリとツール
+- **NVIDIA** for TensorRT and CUDA technologies
+- **Microsoft** for ONNX Runtime
+- **Electron** for the cross-platform framework
+- **Open Source Community** for various libraries and tools
 
-## Roadmap | ロードマップ
+## Roadmap
 
-### Version 2.0 (Planned) | バージョン2.0（予定）
-- [ ] Multi-GPU optimization support | マルチGPU最適化サポート
-- [ ] Custom optimization profiles | カスタム最適化プロファイル
-- [ ] Model comparison tools | モデル比較ツール
-- [ ] Cloud deployment integration | クラウドデプロイ統合
-- [ ] Advanced pruning algorithms | 高度なプルーニングアルゴリズム
+### Version 2.0 (Planned)
+- [ ] Multi-GPU optimization support
+- [ ] Custom optimization profiles
+- [ ] Model comparison tools
+- [ ] Cloud deployment integration
+- [ ] Advanced pruning algorithms
 
-### Version 1.1 (In Progress) | バージョン1.1（進行中）
-- [x] Complete TensorRT integration | 完全なTensorRT統合
-- [x] ONNX Runtime optimization | ONNX Runtime最適化
-- [x] History management system | 履歴管理システム
-- [x] Performance analytics | パフォーマンス分析
-- [ ] Model validation tools | モデル検証ツール
-- [ ] Batch optimization | バッチ最適化
+### Version 1.1 (In Progress)
+- [x] Complete TensorRT integration
+- [x] ONNX Runtime optimization
+- [x] History management system
+- [x] Performance analytics
+- [ ] Model validation tools
+- [ ] Batch optimization
+
+---
+
+<a name="日本語-japanese"></a>
+## 日本語 (Japanese)
+
+TsuruTuneは、NVIDIA Jetsonプラットフォーム専用に設計された包括的な深層学習モデル最適化ツールです。Tensor Coreアクセラレーションとメモリ帯域幅アライメントを活用して、エッジデバイスでの深層学習推論の最適なパフォーマンスを実現します。
+
+## 機能
+
+### モデル最適化
+- **TensorRT統合**: CUDAサポートによる完全なTensorRT最適化
+- **ONNX Runtime**: 量子化を含む包括的なCPU最適化
+- **複数精度形式**: FP32、FP16、BF16、INT8サポート
+- **高度な量子化**: チャネル毎、対称、KVキャッシュ量子化
+- **プルーニング＆スパース化**: 構造化・非構造化プルーニングパターン
+- **グラフ最適化**: バッチ正規化畳み込み、定数畳み込み、グラフ融合
+
+### ユーザーインターフェース
+- **モダンElectronアプリ**: クロスプラットフォームデスクトップアプリケーション
+- **直感的なダッシュボード**: リアルタイム最適化統計とトレンド
+- **履歴管理**: パラメータ追跡による完全な最適化履歴
+- **デバイス設定**: CUDAとCPU用の個別最適化パネル
+- **進捗追跡**: リアルタイム最適化進捗可視化
+
+### 高度な機能
+- **ローカルモデルストレージ**: メタデータ付き整理されたモデル管理
+- **最適化履歴**: 再実行機能付き永続履歴
+- **パフォーマンス分析**: 詳細なパフォーマンス向上とメモリ削減メトリクス
+- **エクスポート機能**: JSON・CSV形式での履歴エクスポート
+- **GitHub統合**: プロジェクトリポジトリへの直接アクセス
+
+## 動作要件
+
+### システム要件
+- **オペレーティングシステム**: Windows 10+、macOS 10.14+、Ubuntu 18.04+
+- **Node.js**: バージョン16.0以上
+- **Python**: バージョン3.8以上
+- **メモリ**: 最小4GB RAM、推奨8GB
+
+### CUDA最適化用（オプション）
+- **NVIDIA GPU**: CUDA対応GPU
+- **CUDA Toolkit**: バージョン11.0以上
+- **TensorRT**: バージョン8.6以上
+- **PyTorch**: バージョン2.0以上
+
+### CPU最適化用
+- **ONNX Runtime**: 自動インストール
+- **NumPy**: 自動インストール
+
+## インストール
+
+### クイックセットアップ
+1. **リポジトリをクローン:**
+   ```bash
+   git clone https://github.com/fsudjatmiko/tsurutune-app.git
+   cd tsurutune-app
+   ```
+
+2. **Node.js依存関係をインストール:**
+   ```bash
+   npm install
+   ```
+
+3. **Python環境をセットアップ:**
+   ```bash
+   # macOS/Linux
+   ./setup.sh
+   
+   # Windows
+   setup.bat
+   ```
+
+4. **アプリケーションを起動:**
+   ```bash
+   npm start
+   ```
+
+### 手動Python設定
+手動設定を希望する場合:
+
+```bash
+# 仮想環境を作成
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 依存関係をインストール
+pip install -r python/requirements.txt
+
+# CUDAサポート用（オプション）
+pip install torch torchvision tensorrt
+```
+
+## 📖 使用方法
+
+### 1. モデルインポート
+- ダッシュボードで「新しいモデルを追加」をクリック
+- ONNX、PyTorch（.pt/.pth）、またはTensorFlow（.pb）モデルを選択
+- モデルがローカルストレージにインポートされます
+
+### 2. 最適化設定
+
+#### CUDA/GPU最適化
+- **精度**: FP32、FP16、BF16、またはINT8から選択
+- **量子化**: チャネル毎および対称量子化を設定
+- **キャリブレーション**: INT8用キャリブレーションデータセットを提供
+- **プルーニング**: スパース化パターンとターゲットを設定
+- **エンジン設定**: バッチサイズ、ワークスペース、戦術を設定
+
+#### CPU最適化
+- **精度**: FP32または動的量子化
+- **グラフ最適化**: 融合と畳み込みを有効化
+- **スレッド**: 最適なパフォーマンスのためのスレッド数設定
+- **プルーニング**: チャネルプルーニングとクラスタリングオプション
+
+### 3. 最適化実行
+1. 「最適化」ページに移動
+2. ターゲットデバイス（CUDAまたはCPU）を選択
+3. 最適化パラメータを設定
+4. 「最適化開始」をクリック
+5. リアルタイム進捗を監視
+
+### 4. 履歴管理
+- 「履歴」ページですべての最適化試行を表示
+- デバイス、ステータス、または日付でフィルタ
+- 各最適化の詳細パラメータを表示
+- 同じ設定で成功した最適化を再実行
+- 分析用履歴エクスポート
+
+### 5. 分析ダッシュボード
+ダッシュボードでは以下を提供:
+- **モデル統計**: 総モデル数と最適化数
+- **パフォーマンスメトリクス**: 平均向上とメモリ削減
+- **成功率**: 最適化成功統計
+- **アクティビティフィード**: 最近の最適化活動
+- **デバイス使用**: 最も使用されるデバイスと精度形式
+
+## アーキテクチャ
+
+### フロントエンド（Electron）
+```
+src/
+├── main/           # Electronメインプロセス
+│   ├── main.js     # アプリケーションエントリポイント
+│   └── preload.js  # IPCブリッジ
+└── renderer/       # UIコンポーネント
+    ├── index.html  # メインインターフェース
+    ├── renderer.js # フロントエンドロジック
+    └── css/        # スタイリング
+```
+
+### バックエンド（Python）
+```
+python/
+├── main.py              # バックエンドエントリポイント
+├── model_manager.py     # モデルストレージ管理
+├── history_manager.py   # 最適化履歴
+├── optimizers/
+│   ├── cuda_optimizer.py   # TensorRT最適化
+│   └── cpu_optimizer.py    # ONNX Runtime最適化
+└── utils/
+    └── logger.py        # ログユーティリティ
+```
+
+### 通信フロー
+1. **フロントエンド** → Electron IPC → **メインプロセス**
+2. **メインプロセス** → Pythonサブプロセス → **バックエンド**
+3. **バックエンド** → JSON応答 → **メインプロセス**
+4. **メインプロセス** → IPC応答 → **フロントエンド**
+
+## 🔧 開発
+
+### 開発モードで実行
+```bash
+npm run dev
+```
+
+### プロダクション用ビルド
+```bash
+# 現在のプラットフォーム用ビルド
+npm run build
+
+# 特定プラットフォーム用ビルド
+npm run build:win    # Windows
+npm run build:mac    # macOS
+npm run build:linux  # Linux
+```
+
+### Pythonバックエンドテスト
+```bash
+# システム情報テスト
+python python/main.py system
+
+# 最適化履歴テスト
+python python/main.py history
+
+# 設定付きテスト
+python python/main.py optimize --config '{"modelPath":"/path/to/model.onnx","device":"cpu"}'
+```
+
+## パフォーマンスベンチマーク
+
+NVIDIA Jetsonプラットフォームでの典型的な最適化結果:
+
+| モデルタイプ | 元のサイズ | 最適化後サイズ | パフォーマンス向上 | メモリ削減 |
+|-------------|-----------|---------------|------------------|----------|
+| ResNet-50   | 98MB      | 25MB          | +45%             | 74%      |
+| YOLOv5      | 45MB      | 12MB          | +60%             | 73%      |
+| BERT-Base   | 110MB     | 28MB          | +35%             | 75%      |
+
+*結果はハードウェア構成と最適化設定により異なる場合があります。*
+
+## テスト
+
+### テスト実行
+```bash
+# フロントエンドテスト
+npm test
+
+# Pythonバックエンドテスト
+python -m pytest python/tests/
+
+# 統合テスト
+npm run test:integration
+```
+
+### コードスタイル
+- **JavaScript**: ESLint設定を含む
+- **Python**: PEP 8ガイドラインに従う
+- **Commits**: 従来のコミットメッセージを使用
+
+## 謝辞
+
+- **NVIDIA** - TensorRTとCUDA技術
+- **Microsoft** - ONNX Runtime
+- **Electron** - クロスプラットフォームフレームワーク
+- **Open Source Community** - 各種ライブラリとツール
+
+## ロードマップ
+
+### バージョン2.0（予定）
+- [ ] マルチGPU最適化サポート
+- [ ] カスタム最適化プロファイル
+- [ ] モデル比較ツール
+- [ ] クラウドデプロイ統合
+- [ ] 高度なプルーニングアルゴリズム
+
+### バージョン1.1（進行中）
+- [x] 完全なTensorRT統合
+- [x] ONNX Runtime最適化
+- [x] 履歴管理システム
+- [x] パフォーマンス分析
+- [ ] モデル検証ツール
+- [ ] バッチ最適化
 
 ---
 *Developed by Farrell Rafee Sudjatmiko - ITS Computer Engineering*
