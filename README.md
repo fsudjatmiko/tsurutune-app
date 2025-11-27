@@ -1,4 +1,4 @@
-# TsuruTune - Edge Device Deep Learning Optimizer
+# TsuruTune 2.0 - Edge Device Deep Learning Optimizer
 
 **[English](#english) | [日本語](#日本語-japanese)**
 
