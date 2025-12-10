@@ -464,6 +464,20 @@ ipcMain.handle('get-system-info', async () => {
   }
 });
 
+ipcMain.handle('benchmark-model', async (event, config) => {
+  try {
+    const configStr = JSON.stringify(config);
+    const result = await executePythonCommand('benchmark', ['--config', configStr]);
+    return result;
+  } catch (error) {
+    console.error('Failed to benchmark model:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
 ipcMain.handle('list-models', async () => {
   try {
     const result = await executePythonCommand('list');

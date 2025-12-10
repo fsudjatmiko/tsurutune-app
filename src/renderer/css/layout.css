@@ -4,7 +4,7 @@
 .header {
     background: var(--bg-white);
     border-bottom: 1px solid var(--border-color);
-    padding: 1rem 2rem;
+    padding: 0.5rem 2rem;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -23,36 +23,12 @@
 .logo-section {
     display: flex;
     align-items: center;
-    gap: 1rem;
 }
 
-.logo {
-    font-size: 1.5rem;
-    font-weight: 700;
-    background: transparent;
-    color: var(--text-on-primary);
-    border-radius: 0;
+.app-logo {
+    height: 50px;
     width: auto;
-    height: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: none;
-    border: none;
-}
-
-.title-section h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.title-section p {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    margin: 0;
-    font-weight: 400;
+    object-fit: contain;
 }
 
 .header-actions {

@@ -37,6 +37,8 @@ class TsuruTuneBackend:
     """Main backend class for TsuruTune optimization"""
     
     def __init__(self):
+        from utils.logger import setup_logger
+        self.logger = setup_logger("tsurutune_backend")
         self.model_manager = ModelManager()
         self.cuda_optimizer = CudaOptimizer()
         self.cpu_optimizer = CpuOptimizer()
@@ -406,6 +408,221 @@ class TsuruTuneBackend:
                 "error": str(e),
                 "system": {}
             }
+    
+    def benchmark_model(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Benchmark model inference performance"""
+        try:
+            import time
+            import numpy as np
+            import tensorflow as tf
+            import psutil
+            import gc
+            
+            model_path = config.get("modelPath")
+            iterations = config.get("iterations", 100)
+            warmup = config.get("warmup", 10)
+            batch_sizes = config.get("batchSizes", [1])
+            enable_profiling = config.get("enableProfiling", False)
+            
+            if not model_path or not os.path.exists(model_path):
+                return {"success": False, "error": "Model file not found"}
+            
+            self.logger.info(f"Starting benchmark for {model_path}")
+            self.logger.info(f"Iterations: {iterations}, Warmup: {warmup}, Batch sizes: {batch_sizes}")
+            
+            # Load model based on format
+            model = None
+            input_shape = None
+            is_tflite = model_path.endswith('.tflite')
+            is_onnx = model_path.endswith('.onnx')
+            
+            if is_tflite:
+                # TFLite model
+                interpreter = tf.lite.Interpreter(model_path=model_path)
+                interpreter.allocate_tensors()
+                input_details = interpreter.get_input_details()[0]
+                output_details = interpreter.get_output_details()
+                input_shape = input_details['shape']
+                self.logger.info(f"TFLite model loaded, input shape: {input_shape}")
+            elif is_onnx:
+                # ONNX model
+                import onnxruntime as ort
+                session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
+                input_details = session.get_inputs()[0]
+                input_shape = input_details.shape
+                self.logger.info(f"ONNX model loaded, input shape: {input_shape}")
+            else:
+                # Keras model
+                model = tf.keras.models.load_model(model_path)
+                input_shape = model.input_shape
+                self.logger.info(f"Keras model loaded, input shape: {input_shape}")
+            
+            # Results storage
+            results = {
+                "success": True,
+                "batch_results": [],
+                "model_info": {
+                    "path": model_path,
+                    "format": "tflite" if is_tflite else ("onnx" if is_onnx else "keras"),
+                    "input_shape": [int(x) if x is not None else 1 for x in input_shape],
+                    "size_mb": os.path.getsize(model_path) / (1024 ** 2)
+                }
+            }
+            
+            # Benchmark each batch size
+            for batch_size in batch_sizes:
+                self.logger.info(f"Benchmarking batch size: {batch_size}")
+                
+                # Create dummy input
+                test_input_shape = list(input_shape)
+                test_input_shape[0] = batch_size  # Set batch size
+                dummy_input = np.random.randn(*test_input_shape).astype(np.float32)
+                
+                # Warmup runs
+                for _ in range(warmup):
+                    if is_tflite:
+                        interpreter.set_tensor(input_details['index'], dummy_input[:1])  # TFLite batch=1 only
+                        interpreter.invoke()
+                    elif is_onnx:
+                        session.run(None, {input_details.name: dummy_input})
+                    else:
+                        _ = model.predict(dummy_input, verbose=0)
+                
+                # Timed runs
+                latencies = []
+                gc.collect()
+                
+                for _ in range(iterations):
+                    start = time.perf_counter()
+                    if is_tflite:
+                        interpreter.set_tensor(input_details['index'], dummy_input[:1])
+                        interpreter.invoke()
+                    elif is_onnx:
+                        session.run(None, {input_details.name: dummy_input})
+                    else:
+                        _ = model.predict(dummy_input, verbose=0)
+                    end = time.perf_counter()
+                    latencies.append((end - start) * 1000)  # Convert to ms
+                
+                # Calculate statistics
+                latencies_array = np.array(latencies)
+                mean_latency = float(np.mean(latencies_array))
+                p50_latency = float(np.percentile(latencies_array, 50))
+                p95_latency = float(np.percentile(latencies_array, 95))
+                p99_latency = float(np.percentile(latencies_array, 99))
+                min_latency = float(np.min(latencies_array))
+                max_latency = float(np.max(latencies_array))
+                throughput = 1000.0 / mean_latency * batch_size
+                
+                # Memory usage
+                process = psutil.Process()
+                memory_mb = process.memory_info().rss / (1024 ** 2)
+                
+                # GPU memory (if available)
+                gpu_memory_mb = 0
+                try:
+                    import torch
+                    if torch.cuda.is_available():
+                        gpu_memory_mb = torch.cuda.max_memory_allocated() / (1024 ** 2)
+                        torch.cuda.reset_peak_memory_stats()
+                except:
+                    pass
+                
+                batch_result = {
+                    "batch_size": batch_size,
+                    "mean_latency_ms": round(mean_latency, 3),
+                    "p50_latency_ms": round(p50_latency, 3),
+                    "p95_latency_ms": round(p95_latency, 3),
+                    "p99_latency_ms": round(p99_latency, 3),
+                    "min_latency_ms": round(min_latency, 3),
+                    "max_latency_ms": round(max_latency, 3),
+                    "throughput_fps": round(throughput, 2),
+                    "memory_mb": round(memory_mb, 2),
+                    "gpu_memory_mb": round(gpu_memory_mb, 2),
+                    "latencies": [round(lat, 3) for lat in latencies[:100]]  # First 100 for histogram
+                }
+                results["batch_results"].append(batch_result)
+                self.logger.info(f"Batch {batch_size}: Mean latency = {mean_latency:.2f}ms, Throughput = {throughput:.2f} FPS")
+            
+            # Layer profiling if enabled
+            if enable_profiling and not is_tflite and not is_onnx:
+                self.logger.info("Starting layer profiling...")
+                profiling_results = self._profile_model_layers(model, dummy_input)
+                results["profiling"] = profiling_results
+            
+            return results
+            
+        except Exception as e:
+            self.logger.error(f"Benchmark failed: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    def _profile_model_layers(self, model, dummy_input):
+        """Profile execution time per layer"""
+        try:
+            import time
+            import numpy as np
+            import tensorflow as tf
+            
+            layer_times = []
+            total_time = 0
+            
+            # Create intermediate models for each layer
+            for i, layer in enumerate(model.layers):
+                if len(layer.output_shape) == 0:
+                    continue
+                    
+                try:
+                    # Create model up to this layer
+                    intermediate_model = tf.keras.Model(inputs=model.input, outputs=layer.output)
+                    
+                    # Warmup
+                    for _ in range(5):
+                        _ = intermediate_model.predict(dummy_input, verbose=0)
+                    
+                    # Time this layer
+                    times = []
+                    for _ in range(50):
+                        start = time.perf_counter()
+                        _ = intermediate_model.predict(dummy_input, verbose=0)
+                        times.append((time.perf_counter() - start) * 1000)
+                    
+                    mean_time = float(np.mean(times))
+                    layer_times.append({
+                        "layer_name": layer.name,
+                        "layer_type": layer.__class__.__name__,
+                        "execution_time_ms": round(mean_time, 3)
+                    })
+                    total_time += mean_time
+                    
+                except Exception as e:
+                    self.logger.warning(f"Could not profile layer {layer.name}: {str(e)}")
+                    continue
+            
+            # Calculate percentages
+            for layer_info in layer_times:
+                layer_info["percentage"] = round((layer_info["execution_time_ms"] / total_time) * 100, 2)
+            
+            # Sort by execution time
+            layer_times.sort(key=lambda x: x["execution_time_ms"], reverse=True)
+            
+            return {
+                "layers": layer_times,
+                "total_time_ms": round(total_time, 3)
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Layer profiling failed: {str(e)}")
+            return {
+                "layers": [],
+                "total_time_ms": 0,
+                "error": str(e)
+            }
+    
     def _validate_config(self, config: Dict[str, Any]) -> bool:
         """Validate optimization configuration"""
         required_fields = ["modelPath", "device"]
@@ -419,7 +636,7 @@ def main():
     parser = argparse.ArgumentParser(description="TsuruTune Model Optimization Backend")
     parser.add_argument("command", choices=[
         "optimize", "list", "import", "history", "stats", "record", 
-        "delete", "clear", "export", "rerun", "system", "refresh"
+        "delete", "clear", "export", "rerun", "system", "refresh", "benchmark"
     ])
     parser.add_argument("--config", type=str, help="JSON configuration file or string")
     parser.add_argument("--model-path", type=str, help="Path to model file")
@@ -520,6 +737,20 @@ def main():
     
     elif args.command == "refresh":
         result = backend.refresh_models()
+        print(json.dumps(result))
+    
+    elif args.command == "benchmark":
+        if not args.config:
+            print(json.dumps({"success": False, "error": "Config required for benchmarking"}))
+            return
+        
+        try:
+            config = json.loads(args.config)
+        except json.JSONDecodeError:
+            with open(args.config, 'r') as f:
+                config = json.load(f)
+        
+        result = backend.benchmark_model(config)
         print(json.dumps(result))
 
 if __name__ == "__main__":

@@ -29,6 +29,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // System operations
   getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
   
+  // Benchmark operations
+  benchmarkModel: (config) => ipcRenderer.invoke('benchmark-model', config),
+  
   // Menu events
   onMenuImportModel: (callback) => ipcRenderer.on('menu-import-model', callback),
   

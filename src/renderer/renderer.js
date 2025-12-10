@@ -136,6 +136,9 @@ function loadPageData(pageId) {
         case 'batch':
             initializeBatchOptimizePage();
             break;
+        case 'benchmark':
+            updateBenchmarkModelSelector();
+            break;
         case 'models':
             updateModelsGrid();
             break;
@@ -2368,6 +2371,374 @@ function clearAllBatchPresets() {
         if (checkbox) checkbox.checked = false;
     });
     updateBatchSummary();
+}
+
+// ==========================================
+// Benchmark & Profiling Functions
+// ==========================================
+
+let benchmarkCharts = {
+    latency: null,
+    batchSize: null,
+    layerTiming: null
+};
+
+// Update benchmark model selector when models change
+function updateBenchmarkModelSelector() {
+    const select = document.getElementById('benchmarkModelSelect');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">-- Select a model --</option>';
+    
+    modelLibrary.forEach(model => {
+        const option = document.createElement('option');
+        // Use local_path which is the absolute path to the model file
+        option.value = model.local_path || model.path;
+        const modelType = model.format || model.type || (model.extension ? model.extension.toUpperCase() : 'Model');
+        option.textContent = `${model.name} (${modelType})`;
+        select.appendChild(option);
+    });
+}
+
+// Initialize benchmark page
+document.getElementById('benchmarkModelSelect')?.addEventListener('change', function() {
+    const btn = document.getElementById('runBenchmarkBtn');
+    btn.disabled = !this.value;
+});
+
+document.getElementById('runBenchmarkBtn')?.addEventListener('click', runBenchmark);
+
+async function runBenchmark() {
+    const modelPath = document.getElementById('benchmarkModelSelect').value;
+    const iterations = parseInt(document.getElementById('benchmarkIterations').value);
+    const warmup = parseInt(document.getElementById('benchmarkWarmup').value);
+    const enableProfiling = document.getElementById('benchmarkProfile').checked;
+    
+    // Get selected batch sizes
+    const batchSizes = Array.from(document.querySelectorAll('.batch-size-checkbox:checked'))
+        .map(cb => parseInt(cb.value));
+    
+    if (!modelPath) {
+        alert('Please select a model to benchmark');
+        return;
+    }
+    
+    if (batchSizes.length === 0) {
+        alert('Please select at least one batch size');
+        return;
+    }
+    
+    console.log('Benchmark config:', { modelPath, iterations, warmup, batchSizes, enableProfiling });
+    
+    // Show progress
+    const progressSection = document.getElementById('benchmarkProgress');
+    const progressBar = document.getElementById('benchmarkProgressBar');
+    const progressText = document.getElementById('benchmarkProgressText');
+    const runButton = document.getElementById('runBenchmarkBtn');
+    
+    progressSection.style.display = 'block';
+    runButton.disabled = true;
+    progressBar.style.width = '0%';
+    progressText.textContent = 'Starting benchmark...';
+    
+    // Hide previous results
+    document.getElementById('benchmarkResultsSection').style.display = 'none';
+    
+    try {
+        // Simulate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 1;
+            if (progress <= 90) {
+                progressBar.style.width = progress + '%';
+                progressText.textContent = `Running benchmark... ${progress}%`;
+            }
+        }, (iterations * batchSizes.length * 50) / 90); // Rough estimate
+        
+        const config = {
+            modelPath,
+            iterations,
+            warmup,
+            batchSizes,
+            enableProfiling
+        };
+        
+        const result = await window.electronAPI.benchmarkModel(config);
+        
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressText.textContent = 'Benchmark complete!';
+        
+        if (result.success) {
+            displayBenchmarkResults(result);
+        } else {
+            throw new Error(result.error || 'Benchmark failed');
+        }
+        
+        setTimeout(() => {
+            progressSection.style.display = 'none';
+            runButton.disabled = false;
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Benchmark error:', error);
+        progressBar.style.width = '100%';
+        progressBar.style.backgroundColor = '#f44336';
+        progressText.textContent = `Error: ${error.message}`;
+        runButton.disabled = false;
+    }
+}
+
+function displayBenchmarkResults(result) {
+    const resultsSection = document.getElementById('benchmarkResultsSection');
+    resultsSection.style.display = 'block';
+    
+    // Get the primary batch result (batch size 1 if available, else first)
+    const primaryResult = result.batch_results.find(r => r.batch_size === 1) || result.batch_results[0];
+    
+    // Update stat cards
+    document.getElementById('benchmarkMeanLatency').textContent = primaryResult.mean_latency_ms.toFixed(2);
+    document.getElementById('benchmarkThroughput').textContent = primaryResult.throughput_fps.toFixed(1);
+    document.getElementById('benchmarkP95Latency').textContent = primaryResult.p95_latency_ms.toFixed(2);
+    document.getElementById('benchmarkGpuMemory').textContent = 
+        primaryResult.gpu_memory_mb > 0 ? primaryResult.gpu_memory_mb.toFixed(1) : 'N/A';
+    
+    // Latency histogram
+    displayLatencyHistogram(primaryResult.latencies);
+    
+    // Batch size comparison (if multiple batch sizes tested)
+    if (result.batch_results.length > 1) {
+        document.getElementById('batchSizeChartContainer').style.display = 'block';
+        displayBatchSizeChart(result.batch_results);
+    } else {
+        document.getElementById('batchSizeChartContainer').style.display = 'none';
+    }
+    
+    // Profiling results
+    if (result.profiling && result.profiling.layers && result.profiling.layers.length > 0) {
+        displayProfilingResults(result.profiling);
+    } else {
+        document.getElementById('profilingResultsSection').style.display = 'none';
+    }
+    
+    // Scroll to results
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function displayLatencyHistogram(latencies) {
+    const ctx = document.getElementById('latencyChart');
+    if (!ctx) return;
+    
+    // Destroy previous chart
+    if (benchmarkCharts.latency) {
+        benchmarkCharts.latency.destroy();
+    }
+    
+    // Create histogram bins
+    const bins = 20;
+    const min = Math.min(...latencies);
+    const max = Math.max(...latencies);
+    const binSize = (max - min) / bins;
+    
+    const histogram = new Array(bins).fill(0);
+    const labels = [];
+    
+    for (let i = 0; i < bins; i++) {
+        const binStart = min + (i * binSize);
+        const binEnd = binStart + binSize;
+        labels.push(`${binStart.toFixed(1)}-${binEnd.toFixed(1)}`);
+        
+        histogram[i] = latencies.filter(lat => lat >= binStart && lat < binEnd).length;
+    }
+    
+    benchmarkCharts.latency = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Frequency',
+                data: histogram,
+                backgroundColor: 'rgba(33, 150, 243, 0.7)',
+                borderColor: 'rgba(33, 150, 243, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Latency Distribution (ms)'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Latency (ms)'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Frequency'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function displayBatchSizeChart(batchResults) {
+    const ctx = document.getElementById('batchSizeChart');
+    if (!ctx) return;
+    
+    if (benchmarkCharts.batchSize) {
+        benchmarkCharts.batchSize.destroy();
+    }
+    
+    const labels = batchResults.map(r => `Batch ${r.batch_size}`);
+    const throughputs = batchResults.map(r => r.throughput_fps);
+    const latencies = batchResults.map(r => r.mean_latency_ms);
+    
+    benchmarkCharts.batchSize = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Throughput (FPS)',
+                    data: throughputs,
+                    borderColor: 'rgba(76, 175, 80, 1)',
+                    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                    yAxisID: 'y-throughput',
+                    tension: 0.1
+                },
+                {
+                    label: 'Latency (ms)',
+                    data: latencies,
+                    borderColor: 'rgba(255, 152, 0, 1)',
+                    backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                    yAxisID: 'y-latency',
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Performance vs Batch Size'
+                }
+            },
+            scales: {
+                'y-throughput': {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Throughput (FPS)'
+                    }
+                },
+                'y-latency': {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Latency (ms)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+function displayProfilingResults(profiling) {
+    const section = document.getElementById('profilingResultsSection');
+    const tbody = document.getElementById('profilingTableBody');
+    
+    section.style.display = 'block';
+    tbody.innerHTML = '';
+    
+    // Populate table
+    profiling.layers.forEach(layer => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${layer.layer_name}</td>
+            <td>${layer.layer_type}</td>
+            <td>${layer.execution_time_ms.toFixed(3)} ms</td>
+            <td>${layer.percentage.toFixed(1)}%</td>
+        `;
+    });
+    
+    // Display top 10 chart
+    const top10 = profiling.layers.slice(0, 10);
+    displayLayerTimingChart(top10);
+}
+
+function displayLayerTimingChart(layers) {
+    const ctx = document.getElementById('layerTimingChart');
+    if (!ctx) return;
+    
+    if (benchmarkCharts.layerTiming) {
+        benchmarkCharts.layerTiming.destroy();
+    }
+    
+    const labels = layers.map(l => l.layer_name);
+    const times = layers.map(l => l.execution_time_ms);
+    
+    benchmarkCharts.layerTiming = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Execution Time (ms)',
+                data: times,
+                backgroundColor: 'rgba(244, 67, 54, 0.7)',
+                borderColor: 'rgba(244, 67, 54, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Top 10 Slowest Layers'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Execution Time (ms)'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 }
 
 // Export functions for potential use
