@@ -11,8 +11,9 @@ torchaudio>=2.0.0
 
 # TensorRT for GPU optimization
 # Note: TensorRT installation requires NVIDIA GPU, CUDA toolkit, and proper setup
-# Install from: https://developer.nvidia.com/tensorrt
-tensorrt>=8.6.0
+# For desktop: Install from https://developer.nvidia.com/tensorrt
+# For Jetson: Pre-installed with JetPack, just install pycuda
+tensorrt>=8.5.0
 
 # CUDA-accelerated libraries
 # Note: These require proper CUDA installation

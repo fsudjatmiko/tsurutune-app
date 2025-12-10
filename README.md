@@ -44,10 +44,10 @@ TsuruTune is a comprehensive deep learning model optimization tool designed for 
 - **Memory**: 4GB RAM minimum, 8GB recommended
 
 ### For CUDA Optimization (Optional)
-- **NVIDIA GPU**: CUDA-compatible GPU
-- **CUDA Toolkit**: Version 11.0 or higher
-- **TensorRT**: Version 8.6 or higher
-- **PyTorch**: Version 2.0 or higher
+- **NVIDIA GPU**: CUDA-compatible GPU (NVIDIA Jetson, RTX, etc.)
+- **CUDA Toolkit**: Version 11.0 or higher (JetPack 5.0+ for Jetson)
+- **TensorRT**: Version 8.5 or higher
+- **PyTorch**: Version 2.0 or higher (use NVIDIA wheels for Jetson)
 
 ### For CPU Optimization
 - **ONNX Runtime**: Automatically installed
@@ -92,8 +92,50 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 # Install dependencies
 pip install -r python/requirements.txt
 
-# For CUDA support (optional)
+# For CUDA support on desktop GPUs
 pip install torch torchvision tensorrt
+
+# For Jetson devices (Orin, Xavier, Nano)
+# Use NVIDIA-provided PyTorch wheels from:
+# https://forums.developer.nvidia.com/t/pytorch-for-jetson/72048
+# TensorRT is pre-installed with JetPack
+```
+
+### Jetson-Specific Setup (Orin Nano, Xavier, etc.)
+
+For NVIDIA Jetson devices with JetPack 5.0+:
+
+```bash
+# Install Node.js 18 for ARM64
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Clone and setup
+git clone https://github.com/fsudjatmiko/tsurutune-app.git
+cd tsurutune-app
+npm install
+
+# Create Python virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install CPU dependencies
+pip install numpy onnx onnxruntime psutil
+
+# Install PyTorch for Jetson (download appropriate wheel)
+# Visit: https://forums.developer.nvidia.com/t/pytorch-for-jetson/72048
+# Example for JetPack 5.1:
+wget https://nvidia.box.com/shared/static/[pytorch-wheel-url].whl
+pip install torch-*.whl
+
+# Install TensorRT Python bindings (TensorRT already in JetPack)
+pip install pycuda
+
+# Optional: TensorFlow for Keras models
+pip install --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v50 tensorflow
+
+# Start the application
+npm start
 ```
 
 ## 📖 Usage Guide

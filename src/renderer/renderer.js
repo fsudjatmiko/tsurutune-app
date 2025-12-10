@@ -400,7 +400,7 @@ function getTimeAgo(date) {
 
 function openGitHubRepo() {
     // Replace with your actual GitHub repository URL
-    const repoUrl = 'https://github.com/yourusername/tsurutune-app';
+    const repoUrl = 'https://github.com/fsudjatmiko/tsurutune-app';
     
     // In Electron, we need to use the shell API to open external URLs
     if (window.electronAPI && window.electronAPI.openExternal) {
@@ -951,6 +951,9 @@ async function loadInitialData() {
         const systemInfo = await window.electronAPI.getSystemInfo();
         console.log('System info:', systemInfo);
         
+        // Update system info display
+        updateSystemInfoDisplay(systemInfo);
+        
         // Load optimization history from backend
         const historyResult = await window.electronAPI.getOptimizationHistory();
         if (historyResult.success) {
@@ -986,6 +989,80 @@ async function loadInitialData() {
         optimizationHistory = [];
     }
 }
+
+// Update system info display
+function updateSystemInfoDisplay(systemInfo) {
+    if (!systemInfo || !systemInfo.success) {
+        return;
+    }
+    
+    const system = systemInfo.system;
+    
+    // Update sidebar summary
+    const deviceTypeEl = document.getElementById('deviceType');
+    if (system.is_jetson) {
+        deviceTypeEl.textContent = system.jetson_model || 'Jetson';
+    } else {
+        deviceTypeEl.textContent = `${system.platform} ${system.architecture}`;
+    }
+    
+    const cpuInfoEl = document.getElementById('cpuInfo');
+    cpuInfoEl.textContent = `${system.cpu_count} cores`;
+    
+    const memoryInfoEl = document.getElementById('memoryInfo');
+    const totalGB = (system.memory_total / (1024 ** 3)).toFixed(1);
+    memoryInfoEl.textContent = `${totalGB} GB`;
+    
+    const gpuInfoEl = document.getElementById('gpuInfo');
+    if (system.cuda_available) {
+        gpuInfoEl.textContent = system.gpu_name ? system.gpu_name.split(' ').slice(0, 2).join(' ') : 'Available';
+    } else {
+        gpuInfoEl.textContent = '-';
+    }
+    
+    // Update modal detailed info
+    const modalDeviceTypeEl = document.getElementById('modalDeviceType');
+    if (system.is_jetson) {
+        modalDeviceTypeEl.textContent = system.jetson_model || 'Jetson Device';
+    } else {
+        modalDeviceTypeEl.textContent = `${system.platform} ${system.architecture}`;
+    }
+    
+    const modalCpuInfoEl = document.getElementById('modalCpuInfo');
+    let cpuText = `${system.cpu_count} cores`;
+    if (system.processor && system.processor !== 'Unknown Processor') {
+        cpuText = `${system.processor} (${system.cpu_count} cores)`;
+    }
+    modalCpuInfoEl.textContent = cpuText;
+    
+    const modalMemoryInfoEl = document.getElementById('modalMemoryInfo');
+    const availableGB = (system.memory_available / (1024 ** 3)).toFixed(1);
+    modalMemoryInfoEl.textContent = `${availableGB}/${totalGB} GB available (${totalGB} GB total)`;
+    
+    const modalGpuInfoEl = document.getElementById('modalGpuInfo');
+    if (system.cuda_available) {
+        let gpuText = system.gpu_name || 'CUDA Available';
+        if (system.cuda_version) {
+            gpuText += ` (CUDA ${system.cuda_version})`;
+        }
+        modalGpuInfoEl.textContent = gpuText;
+    } else {
+        modalGpuInfoEl.textContent = '-';
+    }
+}
+
+// System info modal handlers
+document.getElementById('systemInfoBtn').addEventListener('click', () => {
+    document.getElementById('systemInfoModal').style.display = 'flex';
+});
+
+document.getElementById('closeSystemInfoModal').addEventListener('click', () => {
+    document.getElementById('systemInfoModal').style.display = 'none';
+});
+
+document.getElementById('systemInfoModalOverlay').addEventListener('click', () => {
+    document.getElementById('systemInfoModal').style.display = 'none';
+});
 
 function updateOptimizeButton() {
     const optimizeBtn = document.getElementById('optimizeBtn');

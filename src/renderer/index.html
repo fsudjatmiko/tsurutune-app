@@ -99,6 +99,38 @@
                         <span class="nav-label">History</span>
                     </div>
                 </nav>
+                
+                <!-- System Info Display -->
+                <div class="system-info">
+                    <div class="system-info-header">
+                        <span class="system-info-title">System Info</span>
+                        <button id="systemInfoBtn" class="system-info-details-btn" title="View detailed information">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="system-info-content">
+                        <div class="system-info-item">
+                            <span class="system-info-label">Device:</span>
+                            <span id="deviceType" class="system-info-text">Unknown</span>
+                        </div>
+                        <div class="system-info-item">
+                            <span class="system-info-label">CPU:</span>
+                            <span id="cpuInfo" class="system-info-text">N/A</span>
+                        </div>
+                        <div class="system-info-item">
+                            <span class="system-info-label">RAM:</span>
+                            <span id="memoryInfo" class="system-info-text">N/A</span>
+                        </div>
+                        <div class="system-info-item">
+                            <span class="system-info-label">GPU:</span>
+                            <span id="gpuInfo" class="system-info-text">N/A</span>
+                        </div>
+                    </div>
+                </div>
             </aside>
 
             <!-- Main Content -->
@@ -577,17 +609,13 @@
                                         <div class="config-group">
                                             <label for="cpuOutputFormat">Output Format</label>
                                             <select id="cpuOutputFormat" class="config-select">
-                                                <option value="preserve" selected>Preserve Original Format</option>
-                                                <option value="tflite">Convert to TensorFlow Lite</option>
-                                                <option value="onnx">Convert to ONNX (if supported)</option>
+                                                <option value="preserve" selected>Preserve Original (.keras → .keras, .h5 → .h5)</option>
+                                                <option value="tflite">Convert to TensorFlow Lite (.tflite)</option>
+                                                <option value="onnx">Convert to ONNX (.onnx) - if supported</option>
                                             </select>
-                                        </div>
-                                        <div class="config-group">
-                                            <label class="toggle-switch">
-                                                <input type="checkbox" id="cpuPreserveFormat" checked>
-                                                <span class="toggle-slider"></span>
-                                            </label>
-                                            <label for="cpuPreserveFormat">Preserve Input Format (.keras → .keras, .h5 → .h5)</label>
+                                            <small style="color: #888; margin-top: 0.25rem; display: block;">
+                                                Note: INT8 quantization automatically uses TFLite format
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
@@ -991,6 +1019,40 @@
                     </section>
                 </div>
             </main>
+        </div>
+    </div>
+
+    <!-- System Info Modal -->
+    <div id="systemInfoModal" class="modal" style="display: none;">
+        <div class="modal-overlay" id="systemInfoModalOverlay"></div>
+        <div class="modal-content system-info-modal-content">
+            <div class="modal-header">
+                <h3>System Information</h3>
+                <button class="modal-close" id="closeSystemInfoModal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="system-info-modal-item">
+                    <span class="system-info-modal-label">Device:</span>
+                    <span id="modalDeviceType" class="system-info-modal-value">Unknown Device</span>
+                </div>
+                <div class="system-info-modal-item">
+                    <span class="system-info-modal-label">CPU:</span>
+                    <span id="modalCpuInfo" class="system-info-modal-value">N/A</span>
+                </div>
+                <div class="system-info-modal-item">
+                    <span class="system-info-modal-label">RAM:</span>
+                    <span id="modalMemoryInfo" class="system-info-modal-value">N/A</span>
+                </div>
+                <div class="system-info-modal-item">
+                    <span class="system-info-modal-label">CUDA GPU:</span>
+                    <span id="modalGpuInfo" class="system-info-modal-value">N/A</span>
+                </div>
+            </div>
         </div>
     </div>
 

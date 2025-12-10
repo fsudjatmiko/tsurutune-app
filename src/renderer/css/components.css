@@ -1023,3 +1023,109 @@
     font-weight: 600;
     color: var(--primary-color);
 }
+
+/* System Info Display in Sidebar */
+.system-info {
+    margin-top: auto;
+    padding: 1rem;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-sidebar);
+}
+
+.system-info-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.system-info-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.system-info-details-btn {
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.system-info-details-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.system-info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.system-info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.system-info-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 50px;
+}
+
+.system-info-text {
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+#deviceType {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* System Info Modal */
+.system-info-modal-content {
+    max-width: 600px;
+    width: 90%;
+}
+
+.system-info-modal-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.system-info-modal-item:last-child {
+    border-bottom: none;
+}
+
+.system-info-modal-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 100px;
+    font-size: 0.875rem;
+}
+
+.system-info-modal-value {
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    word-break: break-word;
+}

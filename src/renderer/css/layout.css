@@ -159,10 +159,12 @@
     width: 250px;
     background: var(--bg-sidebar);
     border-right: 1px solid var(--border-color);
-    padding: 1rem 0;
+    padding: 1rem 0 0 0;
     overflow-y: auto;
     flex-shrink: 0; /* Prevent sidebar from shrinking */
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .nav-menu {

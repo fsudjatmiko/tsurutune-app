@@ -304,33 +304,100 @@ class TsuruTuneBackend:
         try:
             import platform
             import psutil
+            import os
             
-            # Check CUDA availability
+            # Check CUDA availability and GPU name
             cuda_available = False
             cuda_version = None
+            gpu_name = None
             try:
                 import torch
                 cuda_available = torch.cuda.is_available()
                 if cuda_available:
                     cuda_version = torch.version.cuda
+                    try:
+                        gpu_name = torch.cuda.get_device_name(0)
+                    except:
+                        pass
             except ImportError:
                 pass
+            
+            # Detect if running on Jetson
+            is_jetson = False
+            jetson_model = None
+            if platform.system() == "Linux":
+                # Check for Jetson-specific files
+                if os.path.exists("/etc/nv_tegra_release"):
+                    is_jetson = True
+                    try:
+                        with open("/etc/nv_tegra_release", "r") as f:
+                            content = f.read()
+                            if "Orin" in content:
+                                jetson_model = "Jetson Orin"
+                            elif "Xavier" in content:
+                                jetson_model = "Jetson Xavier"
+                            elif "TX2" in content:
+                                jetson_model = "Jetson TX2"
+                            elif "Nano" in content:
+                                jetson_model = "Jetson Nano"
+                    except:
+                        pass
+                # Alternative check for device tree
+                elif os.path.exists("/proc/device-tree/model"):
+                    try:
+                        with open("/proc/device-tree/model", "r") as f:
+                            model = f.read()
+                            if "NVIDIA" in model or "Jetson" in model:
+                                is_jetson = True
+                                jetson_model = model.strip()
+                    except:
+                        pass
             
             # Get system stats
             memory = psutil.virtual_memory()
             cpu_count = psutil.cpu_count()
+            
+            # Get processor name
+            processor = None
+            if platform.system() == "Windows":
+                try:
+                    import winreg
+                    key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DESCRIPTION\System\CentralProcessor\0")
+                    processor = winreg.QueryValueEx(key, "ProcessorNameString")[0].strip()
+                    winreg.CloseKey(key)
+                except:
+                    processor = platform.processor()
+            elif platform.system() == "Linux":
+                try:
+                    with open("/proc/cpuinfo", "r") as f:
+                        for line in f:
+                            if "model name" in line:
+                                processor = line.split(":")[1].strip()
+                                break
+                except:
+                    pass
+            
+            # Fallback to platform.processor() if nothing found
+            if not processor:
+                processor = platform.processor()
+            if not processor:
+                processor = "Unknown Processor"
             
             return {
                 "success": True,
                 "system": {
                     "platform": platform.system(),
                     "architecture": platform.machine(),
+                    "processor": processor,
                     "python_version": platform.python_version(),
                     "cpu_count": cpu_count,
                     "memory_total": memory.total,
                     "memory_available": memory.available,
                     "cuda_available": cuda_available,
-                    "cuda_version": cuda_version
+                    "cuda_version": cuda_version,
+                    "gpu_name": gpu_name,
+                    "is_jetson": is_jetson,
+                    "jetson_model": jetson_model
                 }
             }
         except Exception as e:
