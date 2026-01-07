@@ -804,6 +804,37 @@
     text-align: center;
 }
 
+/* Batch size options for benchmark */
+.batch-size-options {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 0.5rem 0;
+}
+
+.batch-size-options .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.batch-size-options .checkbox-label:hover {
+    background: var(--bg-card);
+    border-color: var(--accent-color);
+}
+
+.batch-size-options input[type="checkbox"] {
+    margin: 0;
+}
+
 .batch-results-list {
     display: grid;
     gap: 1rem;

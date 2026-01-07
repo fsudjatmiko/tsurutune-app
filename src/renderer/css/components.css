@@ -42,6 +42,10 @@
     color: var(--text-primary);
 }
 
+.section-content {
+    padding: 0;
+}
+
 /* Upload Components */
 .upload-area {
     width: 100%;
