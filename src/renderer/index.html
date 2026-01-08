@@ -97,6 +97,16 @@
                         </div>
                         <span class="nav-label">Benchmark</span>
                     </div>
+                    <div class="nav-item" data-page="deployment">
+                        <div class="nav-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="2" y1="12" x2="22" y2="12"/>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            </svg>
+                        </div>
+                        <span class="nav-label">Deployment</span>
+                    </div>
                 </nav>
                 
                 <!-- System Info Display -->
@@ -1167,6 +1177,172 @@
                                 <div class="batch-results-list" id="batchResultsList">
                                     <!-- Results will be populated here -->
                                 </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Deployment Page -->
+                <div class="page" id="deploymentPage" style="display: none;">
+                    <div class="page-header">
+                        <h1>🌐 Model Deployment Server</h1>
+                        <p>Share and serve your optimized models over HTTP for easy integration</p>
+                    </div>
+
+                    <!-- Server Status Section -->
+                    <section class="section">
+                        <div class="section-header">
+                            <h2>Server Status</h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="deployment-status-card">
+                                <div class="deployment-status-indicator">
+                                    <span class="deployment-status-dot" id="deploymentStatusDot"></span>
+                                    <span class="deployment-status-text" id="deploymentStatusText">Server not running</span>
+                                </div>
+                                <div class="deployment-actions">
+                                    <button class="btn btn-primary" id="startDeploymentBtn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polygon points="5,3 19,12 5,21 5,3"/>
+                                        </svg>
+                                        Start Server
+                                    </button>
+                                    <button class="btn btn-secondary" id="stopDeploymentBtn" style="display: none;">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="6" y="6" width="12" height="12"/>
+                                        </svg>
+                                        Stop Server
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="deploymentServerInfo" class="deployment-info-card" style="display: none;">
+                                <div class="deployment-info-item">
+                                    <span class="deployment-info-label">Server URL:</span>
+                                    <span class="deployment-info-value" id="deploymentServerUrl">-</span>
+                                    <button class="btn-icon" id="copyUrlBtn" title="Copy URL">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="deployment-info-item">
+                                    <span class="deployment-info-label">Local IP:</span>
+                                    <span class="deployment-info-value" id="deploymentLocalIp">-</span>
+                                </div>
+                                <div class="deployment-info-item">
+                                    <span class="deployment-info-label">Port:</span>
+                                    <span class="deployment-info-value" id="deploymentPort">5000</span>
+                                </div>
+                                <div class="deployment-qr-code" id="deploymentQrCode" style="display: none;">
+                                    <img id="deploymentQrImg" src="" alt="QR Code">
+                                    <p>Scan to access from mobile</p>
+                                </div>
+                                <button class="btn btn-secondary" id="openBrowserBtn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                        <polyline points="15 3 21 3 21 9"/>
+                                        <line x1="10" y1="14" x2="21" y2="3"/>
+                                    </svg>
+                                    Open in Browser
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Server Configuration -->
+                    <section class="section">
+                        <div class="section-header">
+                            <h2>Server Configuration</h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="config-grid">
+                                <div class="config-group">
+                                    <label for="deploymentHost">Host</label>
+                                    <select id="deploymentHost" class="config-select">
+                                        <option value="0.0.0.0">All Interfaces (0.0.0.0)</option>
+                                        <option value="127.0.0.1">Localhost Only (127.0.0.1)</option>
+                                    </select>
+                                    <p class="help-text">0.0.0.0 allows access from other devices on your network</p>
+                                </div>
+                                <div class="config-group">
+                                    <label for="deploymentPortInput">Port</label>
+                                    <input type="number" id="deploymentPortInput" class="config-select" value="5000" min="1024" max="65535">
+                                    <p class="help-text">Port number for the server (1024-65535)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Available Models -->
+                    <section class="section">
+                        <div class="section-header">
+                            <h2>Available Models for Deployment</h2>
+                            <button class="btn btn-secondary" id="refreshDeploymentModelsBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"/>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                </svg>
+                                Refresh
+                            </button>
+                        </div>
+                        <div class="section-content">
+                            <div class="deployment-models-grid" id="deploymentModelsGrid">
+                                <!-- Models will be populated here -->
+                            </div>
+                            <div class="empty-state" id="emptyDeploymentModels" style="display: none;">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 1rem; opacity: 0.5;">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="2" y1="12" x2="22" y2="12"/>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                </svg>
+                                <h3>No models available</h3>
+                                <p>Import and optimize models first to make them available for deployment</p>
+                                <button class="btn btn-primary" onclick="navigateToPage('models')">Go to Models</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- API Documentation -->
+                    <section class="section">
+                        <div class="section-header">
+                            <h2>API Endpoints</h2>
+                        </div>
+                        <div class="section-content">
+                            <div class="api-docs">
+                                <div class="api-endpoint">
+                                    <div class="api-method get">GET</div>
+                                    <code class="api-path">/api/models</code>
+                                    <p class="api-description">List all available models</p>
+                                </div>
+                                <div class="api-endpoint">
+                                    <div class="api-method get">GET</div>
+                                    <code class="api-path">/api/models/&lt;id&gt;</code>
+                                    <p class="api-description">Get model details</p>
+                                </div>
+                                <div class="api-endpoint">
+                                    <div class="api-method get">GET</div>
+                                    <code class="api-path">/api/models/&lt;id&gt;/download</code>
+                                    <p class="api-description">Download model file</p>
+                                </div>
+                                <div class="api-endpoint">
+                                    <div class="api-method get">GET</div>
+                                    <code class="api-path">/api/stats</code>
+                                    <p class="api-description">Get server statistics</p>
+                                </div>
+                            </div>
+                            
+                            <div class="deployment-tips">
+                                <h3>💡 Quick Tips</h3>
+                                <ul>
+                                    <li><strong>Easy Downloads:</strong> Click "Open in Browser" to see all models with download buttons</li>
+                                    <li><strong>Direct Link:</strong> Share <code>http://your-ip:5000/models</code> for the download page</li>
+                                    <li><strong>Local Network:</strong> Anyone on your WiFi can access the server URL</li>
+                                    <li><strong>Internet Access:</strong> Use ngrok (<code>ngrok http 5000</code>) for temporary public access</li>
+                                    <li><strong>Security:</strong> Current setup is for trusted networks only</li>
+                                    <li><strong>API Download:</strong> Use cURL: <code>curl -O -J http://your-ip:5000/api/models/id/download</code></li>
+                                </ul>
                             </div>
                         </div>
                     </section>

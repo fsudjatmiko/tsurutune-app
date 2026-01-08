@@ -22,6 +22,12 @@ protobuf>=3.20.0
 # TensorBoard for visualization of optimization metrics
 tensorboard>=2.13.0
 
+# Deployment module dependencies
+Flask>=2.3.0
+flask-cors>=4.0.0
+qrcode>=7.4.0
+Pillow>=10.0.0
+
 # For development and testing (optional)
 # pytest>=7.0.0
 # black>=22.0.0

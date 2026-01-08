@@ -145,6 +145,9 @@ function loadPageData(pageId) {
         case 'history':
             updateHistoryTable();
             break;
+        case 'deployment':
+            initializeDeploymentPage();
+            break;
     }
 }
 
@@ -2741,6 +2744,238 @@ function displayLayerTimingChart(layers) {
     });
 }
 
+// ============================================================================
+// Deployment Page Functions
+// ============================================================================
+
+let deploymentServerProcess = null;
+let deploymentServerInfo = null;
+
+function initializeDeploymentPage() {
+    // Setup event listeners
+    const startBtn = document.getElementById('startDeploymentBtn');
+    const stopBtn = document.getElementById('stopDeploymentBtn');
+    const refreshBtn = document.getElementById('refreshDeploymentModelsBtn');
+    const copyUrlBtn = document.getElementById('copyUrlBtn');
+    const openBrowserBtn = document.getElementById('openBrowserBtn');
+    
+    if (startBtn) startBtn.addEventListener('click', startDeploymentServer);
+    if (stopBtn) stopBtn.addEventListener('click', stopDeploymentServer);
+    if (refreshBtn) refreshBtn.addEventListener('click', loadDeploymentModels);
+    if (copyUrlBtn) copyUrlBtn.addEventListener('click', copyServerUrl);
+    if (openBrowserBtn) openBrowserBtn.addEventListener('click', openServerInBrowser);
+    
+    // Load available models
+    loadDeploymentModels();
+    
+    // Check if server is running
+    checkDeploymentServerStatus();
+}
+
+async function startDeploymentServer() {
+    try {
+        const host = document.getElementById('deploymentHost').value;
+        const port = parseInt(document.getElementById('deploymentPortInput').value);
+        
+        updateDeploymentStatus('starting', 'Starting server...');
+        
+        const result = await window.electronAPI.startDeploymentServer({ host, port });
+        
+        if (result.success) {
+            deploymentServerInfo = result.serverInfo;
+            updateDeploymentStatus('running', 'Server running');
+            displayServerInfo(result.serverInfo);
+        } else {
+            updateDeploymentStatus('error', `Error: ${result.error}`);
+            alert(`Failed to start server: ${result.error}`);
+        }
+    } catch (error) {
+        console.error('Error starting deployment server:', error);
+        updateDeploymentStatus('error', 'Error starting server');
+        alert(`Failed to start server: ${error.message}`);
+    }
+}
+
+async function stopDeploymentServer() {
+    try {
+        updateDeploymentStatus('stopping', 'Stopping server...');
+        
+        const result = await window.electronAPI.stopDeploymentServer();
+        
+        if (result.success) {
+            deploymentServerInfo = null;
+            updateDeploymentStatus('stopped', 'Server stopped');
+            hideServerInfo();
+        } else {
+            updateDeploymentStatus('error', `Error: ${result.error}`);
+        }
+    } catch (error) {
+        console.error('Error stopping deployment server:', error);
+        updateDeploymentStatus('error', 'Error stopping server');
+    }
+}
+
+async function checkDeploymentServerStatus() {
+    try {
+        const result = await window.electronAPI.checkDeploymentServer();
+        
+        if (result.running) {
+            deploymentServerInfo = result.serverInfo;
+            updateDeploymentStatus('running', 'Server running');
+            displayServerInfo(result.serverInfo);
+        } else {
+            updateDeploymentStatus('stopped', 'Server not running');
+        }
+    } catch (error) {
+        console.error('Error checking server status:', error);
+    }
+}
+
+function updateDeploymentStatus(status, text) {
+    const dot = document.getElementById('deploymentStatusDot');
+    const statusText = document.getElementById('deploymentStatusText');
+    const startBtn = document.getElementById('startDeploymentBtn');
+    const stopBtn = document.getElementById('stopDeploymentBtn');
+    
+    if (dot) {
+        dot.className = 'deployment-status-dot ' + status;
+    }
+    
+    if (statusText) {
+        statusText.textContent = text;
+    }
+    
+    if (startBtn && stopBtn) {
+        if (status === 'running') {
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-flex';
+        } else {
+            startBtn.style.display = 'inline-flex';
+            stopBtn.style.display = 'none';
+        }
+    }
+}
+
+function displayServerInfo(serverInfo) {
+    const infoCard = document.getElementById('deploymentServerInfo');
+    const serverUrl = document.getElementById('deploymentServerUrl');
+    const localIp = document.getElementById('deploymentLocalIp');
+    const port = document.getElementById('deploymentPort');
+    
+    if (infoCard) infoCard.style.display = 'block';
+    if (serverUrl) serverUrl.textContent = serverInfo.url;
+    if (localIp) localIp.textContent = serverInfo.host;
+    if (port) port.textContent = serverInfo.port;
+    
+    // Generate QR code for the URL (simplified - would use actual QR library)
+    // For now, just show a placeholder
+}
+
+function hideServerInfo() {
+    const infoCard = document.getElementById('deploymentServerInfo');
+    if (infoCard) infoCard.style.display = 'none';
+}
+
+async function loadDeploymentModels() {
+    try {
+        const result = await window.electronAPI.listModels();
+        
+        if (result.success) {
+            displayDeploymentModels(result.models);
+        }
+    } catch (error) {
+        console.error('Error loading deployment models:', error);
+    }
+}
+
+function displayDeploymentModels(models) {
+    const grid = document.getElementById('deploymentModelsGrid');
+    const emptyState = document.getElementById('emptyDeploymentModels');
+    
+    if (!grid) return;
+    
+    if (models.length === 0) {
+        grid.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'flex';
+        return;
+    }
+    
+    grid.style.display = 'grid';
+    if (emptyState) emptyState.style.display = 'none';
+    
+    grid.innerHTML = models.map(model => {
+        const isOriginal = model.is_original !== false;
+        const typeClass = isOriginal ? 'original' : 'optimized';
+        const typeLabel = isOriginal ? 'Original' : 'Optimized';
+        const serverUrl = deploymentServerInfo ? deploymentServerInfo.url : 'http://localhost:5000';
+        const downloadUrl = `${serverUrl}/api/models/${model.id}/download`;
+        
+        return `
+            <div class="deployment-model-card">
+                <div class="deployment-model-header">
+                    <div>
+                        <div class="deployment-model-name">${model.name || 'Unnamed Model'}</div>
+                        <span class="deployment-model-type ${typeClass}">${typeLabel}</span>
+                    </div>
+                </div>
+                <div class="deployment-model-info">
+                    <div class="deployment-model-info-item">
+                        <span class="deployment-model-info-label">Size:</span>
+                        <span class="deployment-model-info-value">${model.size_mb ? model.size_mb.toFixed(2) : '0'} MB</span>
+                    </div>
+                    <div class="deployment-model-info-item">
+                        <span class="deployment-model-info-label">Type:</span>
+                        <span class="deployment-model-info-value">${model.type || 'unknown'}</span>
+                    </div>
+                    <div class="deployment-model-info-item">
+                        <span class="deployment-model-info-label">ID:</span>
+                        <span class="deployment-model-info-value" style="font-size: 0.75rem;">${model.id}</span>
+                    </div>
+                </div>
+                ${deploymentServerInfo ? `
+                    <div class="deployment-model-url">
+                        <strong>Download URL:</strong><br>
+                        ${downloadUrl}
+                    </div>
+                ` : `
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.75rem;">
+                        Start the server to get download URLs
+                    </p>
+                `}
+            </div>
+        `;
+    }).join('');
+}
+
+function copyServerUrl() {
+    if (!deploymentServerInfo) return;
+    
+    navigator.clipboard.writeText(deploymentServerInfo.url).then(() => {
+        // Show temporary feedback
+        const btn = document.getElementById('copyUrlBtn');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        `;
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy URL:', err);
+        alert('Failed to copy URL to clipboard');
+    });
+}
+
+function openServerInBrowser() {
+    if (!deploymentServerInfo) return;
+    
+    // Open the models page directly for easier downloads
+    const modelsUrl = deploymentServerInfo.url + '/models';
+    window.electronAPI.openExternal(modelsUrl);
+}
+
 // Export functions for potential use
 window.TsuruTune = {
     navigateToPage,
@@ -2749,7 +2984,9 @@ window.TsuruTune = {
     startOptimization,
     updateStatus,
     scanForDevices,
-    runBenchmark
+    runBenchmark,
+    startDeploymentServer,
+    stopDeploymentServer
 };
 
 // Make batch functions global

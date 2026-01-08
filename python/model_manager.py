@@ -283,6 +283,10 @@ class ModelManager:
         """Get model metadata by ID"""
         return self.metadata["models"].get(model_id)
     
+    def get_model_info(self, model_id: str) -> Optional[Dict[str, Any]]:
+        """Get model metadata by ID (alias for get_model)"""
+        return self.get_model(model_id)
+    
     def delete_model(self, model_id: str) -> bool:
         """Delete a model from storage"""
         if model_id not in self.metadata["models"]:

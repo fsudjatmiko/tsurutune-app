@@ -29,5 +29,11 @@ tensorrt>=8.5.0
 # Memory profiling for GPU optimization
 gpustat>=1.0.0
 
+# Deployment module dependencies (included in CPU requirements but listed here for reference)
+# Flask>=2.3.0
+# flask-cors>=4.0.0
+# qrcode>=7.4.0
+# Pillow>=10.0.0
+
 # Development tools for CUDA debugging
 # nvidia-ml-py3>=7.352.0

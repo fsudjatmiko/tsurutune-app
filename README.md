@@ -34,6 +34,7 @@ TsuruTune is a comprehensive deep learning model optimization tool designed for 
 - **Export Capabilities**: Save optimized models to any location, generate detailed reports, history export in JSON and CSV formats
 - **GitHub Integration**: Direct access to project repository
 - **16 CPU Optimization Parameters**: Complete control over quantization, pruning, graph optimizations, and runtime configuration
+- **🌐 Model Deployment Server**: Share and serve your models over HTTP API for easy integration into other applications (see [Deployment Module](#deployment-module))
 
 ## Requirements
 
@@ -275,6 +276,76 @@ Typical optimization results on edge devices:
 | BERT-Base  | 110MB        | 28MB (INT8)   | +35%            | 75%             |
 
 *Results may vary based on hardware configuration and optimization settings. Benchmarks performed using real inference timing.*
+
+## Deployment Module
+
+TsuruTune includes a deployment module that allows you to serve your optimized models over HTTP, making them accessible for download and integration into other applications.
+
+### Starting the Deployment Server
+
+```bash
+# Install deployment dependencies (if not already installed)
+pip install Flask flask-cors qrcode Pillow
+
+# Start the server
+cd python
+python start_server.py
+
+# Or with custom port
+python start_server.py --port 8000
+```
+
+### Features
+
+- 🌐 **HTTP API** - RESTful API for listing and downloading models
+- 📱 **QR Code Access** - Automatically generates QR codes for easy mobile access
+- 🔒 **Network Support** - Works on local network (LAN) and can be exposed externally
+- 📊 **Statistics** - View server stats and model information
+- 🎨 **Web Interface** - Beautiful web UI with complete API documentation
+
+### Access Your Models
+
+Once the server is running:
+1. Open the displayed URL in your browser (e.g., `http://192.168.1.100:5000`)
+2. View all available models (original and optimized)
+3. Download models directly or via API
+4. Share the URL with others on your network
+
+### API Examples
+
+**List all models:**
+```bash
+curl http://192.168.1.100:5000/api/models
+```
+
+**Download a model:**
+```bash
+curl -O -J http://192.168.1.100:5000/api/models/your_model_id/download
+```
+
+**Python client:**
+```python
+import requests
+
+# List models
+response = requests.get('http://192.168.1.100:5000/api/models')
+models = response.json()
+
+# Download a model
+model_id = models['models'][0]['id']
+response = requests.get(f'http://192.168.1.100:5000/api/models/{model_id}/download')
+with open('model.onnx', 'wb') as f:
+    f.write(response.content)
+```
+
+For detailed documentation, see [python/deployment/README.md](python/deployment/README.md)
+
+### External Access
+
+To allow access from outside your local network:
+- **Port Forwarding**: Set up on your router to forward the server port
+- **ngrok**: Quick temporary tunneling: `ngrok http 5000`
+- **Cloud Deployment**: Deploy to AWS, Azure, Google Cloud, or DigitalOcean
 
 ## Testing
 
@@ -554,6 +625,76 @@ python python/main.py optimize --config '{"modelPath":"/path/to/model.onnx","dev
 | BERT-Base   | 110MB     | 28MB (INT8)   | +35%             | 75%      |
 
 *結果はハードウェア構成と最適化設定により異なる場合があります。実際の推論タイミングを使用してベンチマークを実行。*
+
+## デプロイメントモジュール
+
+TsuruTuneには、最適化されたモデルをHTTP経由で提供し、他のアプリケーションへの統合やダウンロードを可能にするデプロイメントモジュールが含まれています。
+
+### デプロイメントサーバーの起動
+
+```bash
+# デプロイメント依存関係をインストール（まだの場合）
+pip install Flask flask-cors qrcode Pillow
+
+# サーバーを起動
+cd python
+python start_server.py
+
+# またはカスタムポートで
+python start_server.py --port 8000
+```
+
+### 機能
+
+- 🌐 **HTTP API** - モデルのリストとダウンロードのためのRESTful API
+- 📱 **QRコードアクセス** - モバイルアクセス用のQRコードを自動生成
+- 🔒 **ネットワークサポート** - ローカルネットワーク（LAN）で動作し、外部公開も可能
+- 📊 **統計情報** - サーバー統計とモデル情報の表示
+- 🎨 **Webインターフェース** - 完全なAPIドキュメントを備えた美しいWeb UI
+
+### モデルへのアクセス
+
+サーバーが起動したら:
+1. 表示されたURLをブラウザで開く（例：`http://192.168.1.100:5000`）
+2. 利用可能なすべてのモデル（オリジナルと最適化済み）を表示
+3. モデルを直接またはAPI経由でダウンロード
+4. ネットワーク上の他のユーザーとURLを共有
+
+### API例
+
+**すべてのモデルをリスト:**
+```bash
+curl http://192.168.1.100:5000/api/models
+```
+
+**モデルをダウンロード:**
+```bash
+curl -O -J http://192.168.1.100:5000/api/models/your_model_id/download
+```
+
+**Pythonクライアント:**
+```python
+import requests
+
+# モデルをリスト
+response = requests.get('http://192.168.1.100:5000/api/models')
+models = response.json()
+
+# モデルをダウンロード
+model_id = models['models'][0]['id']
+response = requests.get(f'http://192.168.1.100:5000/api/models/{model_id}/download')
+with open('model.onnx', 'wb') as f:
+    f.write(response.content)
+```
+
+詳細なドキュメントについては、[python/deployment/README.md](python/deployment/README.md)を参照してください。
+
+### 外部アクセス
+
+ローカルネットワーク外からのアクセスを許可するには:
+- **ポートフォワーディング**: ルーターでサーバーポートを転送するように設定
+- **ngrok**: 一時的なトンネリング: `ngrok http 5000`
+- **クラウドデプロイ**: AWS、Azure、Google Cloud、またはDigitalOceanにデプロイ
 
 ## テスト
 

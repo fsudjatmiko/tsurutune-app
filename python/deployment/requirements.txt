@@ -1,0 +1,12 @@
+# Deployment Module Requirements
+# HTTP server and API framework
+Flask>=2.3.0
+flask-cors>=4.0.0
+
+# QR code generation for easy mobile access
+qrcode>=7.4.0
+Pillow>=10.0.0
+
+# For production deployment (optional)
+# gunicorn>=21.0.0  # Linux/Mac
+# waitress>=2.1.0   # Windows-friendly

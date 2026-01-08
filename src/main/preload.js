@@ -32,6 +32,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Benchmark operations
   benchmarkModel: (config) => ipcRenderer.invoke('benchmark-model', config),
   
+  // Deployment operations
+  startDeploymentServer: (config) => ipcRenderer.invoke('start-deployment-server', config),
+  stopDeploymentServer: () => ipcRenderer.invoke('stop-deployment-server'),
+  checkDeploymentServer: () => ipcRenderer.invoke('check-deployment-server'),
+  
+  // Open external links
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  
   // Menu events
   onMenuImportModel: (callback) => ipcRenderer.on('menu-import-model', callback),
   

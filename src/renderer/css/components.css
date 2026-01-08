@@ -85,7 +85,7 @@
 .drop-zone:hover,
 .drop-zone.drag-over {
     border-color: var(--accent-color);
-    background: rgba(49, 130, 206, 0.05);
+    background: rgba(14, 165, 233, 0.05);
 }
 
 .drop-zone-content {
@@ -758,15 +758,24 @@
 }
 
 .btn-primary {
-    background: var(--primary-color);
+    background: var(--accent-color);
     color: white;
     border: none;
 }
 
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
 .btn-secondary {
-    background: var(--bg-overlay);
+    background: var(--bg-white);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent-color);
 }
 
 .btn-danger {

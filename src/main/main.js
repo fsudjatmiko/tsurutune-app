@@ -523,3 +523,185 @@ ipcMain.handle('import-model', async (event, modelPath, modelName = null) => {
     };
   }
 });
+
+// Deployment server handlers
+let deploymentServerProcess = null;
+let deploymentServerInfo = null;
+
+ipcMain.handle('start-deployment-server', async (event, config) => {
+  try {
+    if (deploymentServerProcess) {
+      return {
+        success: false,
+        error: 'Server is already running'
+      };
+    }
+
+    const host = config.host || '0.0.0.0';
+    const port = config.port || 5000;
+    
+    const pythonPath = path.join(__dirname, '../../python/start_server.py');
+    const args = ['--host', host, '--port', port.toString()];
+    
+    // Determine Python executable (same logic as executePythonCommand)
+    const possibleVenvs = [
+      path.join(__dirname, '../../python/venv'),
+      path.join(__dirname, '../../.venv')
+    ];
+    let venvPath = null;
+    for (const p of possibleVenvs) {
+      if (fs.existsSync(p)) {
+        venvPath = p;
+        break;
+      }
+    }
+
+    let pythonExecutable = 'python';
+    if (venvPath) {
+      if (process.platform === 'win32') {
+        const winPy = path.join(venvPath, 'Scripts', 'python.exe');
+        if (fs.existsSync(winPy)) pythonExecutable = winPy;
+      } else {
+        const posixPy = path.join(venvPath, 'bin', 'python');
+        if (fs.existsSync(posixPy)) pythonExecutable = posixPy;
+      }
+    }
+
+    const delim = path.delimiter;
+    const env = {
+      ...process.env,
+      PYTHONPATH: path.join(__dirname, '../../python'),
+      PATH: (venvPath ? (path.join(venvPath, process.platform === 'win32' ? 'Scripts' : 'bin') + delim) : '') + (process.env.PATH || ''),
+      TF_CPP_MIN_LOG_LEVEL: '3'
+    };
+
+    if (venvPath) env.VIRTUAL_ENV = venvPath;
+
+    console.log('[Deployment Server] Starting server...');
+    console.log('[Deployment Server] Python executable:', pythonExecutable);
+    console.log('[Deployment Server] Python script:', pythonPath);
+    console.log('[Deployment Server] Args:', args);
+    console.log('[Deployment Server] CWD:', path.join(__dirname, '../../python'));
+
+    deploymentServerProcess = spawn(pythonExecutable, [pythonPath, ...args], {
+      env,
+      cwd: path.join(__dirname, '../../python')
+    });
+
+    // Capture server info from stdout
+    let serverStarted = false;
+    deploymentServerProcess.stdout.on('data', (data) => {
+      const output = data.toString();
+      console.log('[Deployment Server]:', output);
+      
+      // Parse server info from output
+      const urlMatch = output.match(/Server URL: (http:\/\/[^\s]+)/);
+      const ipMatch = output.match(/Local IP: ([^\s]+)/);
+      
+      if (urlMatch && ipMatch && !serverStarted) {
+        serverStarted = true;
+        deploymentServerInfo = {
+          url: urlMatch[1],
+          host: ipMatch[1],
+          port: port
+        };
+      }
+    });
+
+    deploymentServerProcess.stderr.on('data', (data) => {
+      console.error('[Deployment Server Error]:', data.toString());
+    });
+
+    deploymentServerProcess.on('error', (error) => {
+      console.error('[Deployment Server Process Error]:', error);
+    });
+
+    deploymentServerProcess.on('close', (code) => {
+      console.log(`Deployment server process exited with code ${code}`);
+      deploymentServerProcess = null;
+      deploymentServerInfo = null;
+    });
+
+    // Wait a bit for server to start
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    if (!deploymentServerInfo) {
+      // Fallback info if we couldn't parse it
+      const { networkInterfaces } = require('os');
+      const nets = networkInterfaces();
+      let localIp = '127.0.0.1';
+      
+      for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+          if (net.family === 'IPv4' && !net.internal) {
+            localIp = net.address;
+            break;
+          }
+        }
+      }
+
+      deploymentServerInfo = {
+        url: `http://${localIp}:${port}`,
+        host: localIp,
+        port: port
+      };
+    }
+
+    return {
+      success: true,
+      serverInfo: deploymentServerInfo
+    };
+  } catch (error) {
+    console.error('Failed to start deployment server:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+ipcMain.handle('stop-deployment-server', async () => {
+  try {
+    if (!deploymentServerProcess) {
+      return {
+        success: false,
+        error: 'Server is not running'
+      };
+    }
+
+    deploymentServerProcess.kill();
+    deploymentServerProcess = null;
+    deploymentServerInfo = null;
+
+    return {
+      success: true
+    };
+  } catch (error) {
+    console.error('Failed to stop deployment server:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+ipcMain.handle('check-deployment-server', async () => {
+  return {
+    running: deploymentServerProcess !== null,
+    serverInfo: deploymentServerInfo
+  };
+});
+
+ipcMain.handle('open-external', async (event, url) => {
+  try {
+    const { shell } = require('electron');
+    await shell.openExternal(url);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to open external URL:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
